@@ -4,5 +4,5 @@ Bundle-Name: jpiere.modification.org.adempiere.base
 Bundle-SymbolicName: jpiere.modification.org.adempiere.base
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: OSS ERP Solutions
-Fragment-Host: org.adempiere.base;bundle-version="3.0.0"
+Fragment-Host: org.adempiere.base;bundle-version="2.1.0.qualifier"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
