@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -46,6 +47,7 @@ import javax.print.attribute.DocAttributeSet;
 import org.compiere.model.MClientInfo;
 import org.compiere.model.MLocation;				//JPIERE-3 Import MLocation to LayoutEngine
 import org.compiere.model.MQuery;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MTable;
 import org.compiere.model.PrintInfo;
 import org.compiere.print.ArchiveEngine;
@@ -70,6 +72,7 @@ import org.compiere.util.KeyNamePair;
 import org.compiere.util.Language;							//JPIERE-3 Import Language to LayoutEngine
 import org.compiere.util.Msg;
 import org.compiere.util.NamePair;
+import org.compiere.util.Util;
 import org.compiere.util.ValueNamePair;
 
 /**
@@ -262,7 +265,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		m_printFont = MPrintFont.get (format.getAD_PrintFont_ID());
 
 		//	Print Context
-		Env.setContext(m_printCtx, Page.CONTEXT_REPORTNAME, m_format.getName());
+		Env.setContext(m_printCtx, Page.CONTEXT_REPORTNAME, m_format.get_Translation(MPrintFormat.COLUMNNAME_Name));
 		Env.setContext(m_printCtx, Page.CONTEXT_HEADER, Env.getHeader(m_printCtx, 0));
 		Env.setContext(m_printCtx, Env.LANGUAGE, m_format.getLanguage().getAD_Language());
 
@@ -969,12 +972,19 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		element.setLocation(ft);
 		m_headerFooter.addElement(element);
 		//
-		element = new StringElement("@*Header@", font, color, null, true);
+		String s = MSysConfig.getValue(MSysConfig.ZK_FOOTER_SERVER_MSG, "@*Header@", Env.getAD_Client_ID(Env.getCtx()));
+		element = new StringElement(s, font, color, null, true);
 		element.layout (m_footer.width, 0, true, MPrintFormatItem.FIELDALIGNMENTTYPE_Center);
 		element.setLocation(ft);
 		m_headerFooter.addElement(element);
 		//
-		element = new StringElement("@*CurrentDateTime@", font, color, null, true);
+		String timestamp = "";
+		s = MSysConfig.getValue(MSysConfig.ZK_FOOTER_SERVER_DATETIME_FORMAT, Env.getAD_Client_ID(Env.getCtx()));
+		if (!Util.isEmpty(s))
+			timestamp = new SimpleDateFormat(s).format(System.currentTimeMillis());
+		else
+			timestamp = "@*CurrentDateTime@";
+		element = new StringElement(timestamp, font, color, null, true);
 		element.layout (m_footer.width, 0, true, MPrintFormatItem.FIELDALIGNMENTTYPE_TrailingRight);
 		element.setLocation(ft);
 		m_headerFooter.addElement(element);
@@ -999,6 +1009,9 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		{
 			if (log.isLoggable(Level.INFO)) log.info("Row=" + row);
 			m_data.setRowIndex(row);
+			if (row > 0)
+				newPage(true, false); // break page per record when the report is a form
+			
 			boolean somethingPrinted = true;	//	prevent NL of nothing printed and supress null
 			//	for every item
 			for (int i = 0; i < m_format.getItemCount(); i++)
@@ -1361,7 +1374,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		if (data.isNull() && item.isSuppressNull())
 			return null;
 
-		String stringContent = null;
+		String stringContent = data.getValueDisplay (m_format.getLanguage());
 		if(data.getDisplayType()==DisplayType.Amount || data.getDisplayType()==DisplayType.CostPrice)
 		{
 			stringContent = getValueDisplay (m_format.getLanguage(), getC_Currency_ID(m_data), data);

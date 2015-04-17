@@ -13,8 +13,6 @@
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.*;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.print.PrinterJob;
@@ -72,7 +70,12 @@ import org.compiere.model.MPaySelectionCheck;
 import org.compiere.model.MProject;
 import org.compiere.model.MQuery;
 import org.compiere.model.MRfQResponse;
+import org.compiere.model.MRole;
+import org.compiere.model.MTable;
 import org.compiere.model.PrintInfo;
+
+import static org.compiere.model.SystemIDs.*;
+
 import org.compiere.print.layout.LayoutEngine;
 import org.compiere.process.ProcessInfo;
 import org.compiere.process.ServerProcessCtl;
@@ -127,17 +130,44 @@ public class ReportEngine implements PrintServiceAttributeListener
 	{
 		this(ctx, pf, query, info, null);
 	}	//	ReportEngine
-
+	
+	/**
+	 * Set report engine with summary and null transaction
+	 * @param ctx
+	 * @param pf
+	 * @param query
+	 * @param info
+	 * @param isSummary
+	 */
+	public ReportEngine (Properties ctx, MPrintFormat pf, MQuery query, PrintInfo info, boolean isSummary)
+	{
+		this(ctx, pf, query, info, isSummary, null);
+	}	//	ReportEngine
+	
+	/**
+	 * Set report engine with summary = false
+	 * @param ctx
+	 * @param pf
+	 * @param query
+	 * @param info
+	 * @param trxName
+	 */
+	public ReportEngine (Properties ctx, MPrintFormat pf, MQuery query, PrintInfo info, String trxName){
+		this(ctx, pf, query, info, false, trxName);
+	}
+	
 	/**
 	 *	Constructor
 	 * 	@param ctx context
 	 *  @param pf Print Format
 	 *  @param query Optional Query
 	 *  @param info print info
+	 *  @param isSummary
 	 *  @param trxName
 	 */
-	public ReportEngine (Properties ctx, MPrintFormat pf, MQuery query, PrintInfo info, String trxName)
+	public ReportEngine (Properties ctx, MPrintFormat pf, MQuery query, PrintInfo info, boolean isSummary, String trxName)
 	{
+		m_summary = isSummary;
 		if (pf == null)
 			throw new IllegalArgumentException("ReportEngine - no PrintFormat");
 		if (log.isLoggable(Level.INFO)) log.info(pf + " -- " + query);
@@ -174,6 +204,8 @@ public class ReportEngine implements PrintServiceAttributeListener
 	private String 			m_whereExtended = null;
 	/** Window */
 	private int m_windowNo = 0;
+	
+	private int m_language_id = 0;
 
 	private boolean m_summary = false;
 
@@ -336,7 +368,7 @@ public class ReportEngine implements PrintServiceAttributeListener
 	 */
 	public Properties getCtx()
 	{
-		return getLayout().getCtx();
+		return m_ctx;
 	}	//	getCtx
 
 	/**
@@ -649,7 +681,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 							else if (obj instanceof PrintDataElement)
 							{
 								PrintDataElement pde = (PrintDataElement) obj;//JPIERE-3 Modify ReportEngine#createHTML by Hideaki Hagiwara
-								String value = null;
+								String value = pde.getValueDisplay(language);	//	formatted;
 								if(pde.getDisplayType()==DisplayType.Amount || pde.getDisplayType() == DisplayType.CostPrice)
 								{
 									value = getValueDisplay(language, getC_Currency_ID(m_printData), pde);
@@ -659,15 +691,56 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 								 											//JPiere-3 Finish
 								if (pde.getColumnName().endsWith("_ID") && extension != null)
 								{
-									//link for column
-									a href = new a("javascript:void(0)");
-									href.setID(pde.getColumnName() + "_" + row + "_a");
-									td.addElement(href);
-									href.addElement(Util.maskHTML(value));
-									if (cssPrefix != null)
-										href.setClass(cssPrefix + "-href");
-
-									extension.extendIDColumn(row, td, href, pde);
+									boolean isZoom = false;
+									if (item.getColumnName().equals("Record_ID")) {
+										Object tablePDE = m_printData.getNode("AD_Table_ID");
+										if (tablePDE != null && tablePDE instanceof PrintDataElement) {
+											int tableID = -1;
+											try {
+												tableID = Integer.parseInt(((PrintDataElement)tablePDE).getValueAsString());
+											} catch (Exception e) {
+												tableID = -1;
+											}
+											if (tableID > 0) {
+												MTable mTable = MTable.get(getCtx(), tableID);
+												String foreignColumnName = mTable.getTableName() + "_ID";
+												pde.setForeignColumnName(foreignColumnName);
+												isZoom = true;
+											}
+										}
+									} else {
+										isZoom = true;
+									}
+									if (isZoom) {
+										// check permission on the zoomed window
+										MTable mTable = MTable.get(getCtx(), pde.getForeignColumnName().substring(0, pde.getForeignColumnName().length()-3));
+										int Record_ID = -1;
+										try {
+											Record_ID = Integer.parseInt(pde.getValueAsString());
+										} catch (Exception e) {
+											Record_ID = -1;
+										}
+							    		Boolean canAccess = null;
+										if (Record_ID >= 0 && mTable != null) {
+											int AD_Window_ID = Env.getZoomWindowID(mTable.get_ID(), Record_ID);
+								    		canAccess = MRole.getDefault().getWindowAccess(AD_Window_ID);
+										}
+							    		if (canAccess == null) {
+							    			isZoom = false;
+							    		}
+									}
+									if (isZoom) {
+										//link for column
+										a href = new a("javascript:void(0)");									
+										href.setID(pde.getColumnName() + "_" + row + "_a");									
+										td.addElement(href);
+										href.addElement(Util.maskHTML(value));
+										if (cssPrefix != null)
+											href.setClass(cssPrefix + "-href");
+										extension.extendIDColumn(row, td, href, pde);
+									} else {
+										td.addElement(Util.maskHTML(value));
+									}
 
 								}
 								else
@@ -1281,7 +1354,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		PrintInfo info = new PrintInfo (pi);
 		info.setAD_Table_ID(AD_Table_ID);
 
-		return new ReportEngine(ctx, format, query, info, pi.getTransactionName());
+		return new ReportEngine(ctx, format, query, info, pi.isSummary(), pi.getTransactionName());
 	}	//	get
 
 	/*************************************************************************/
@@ -1596,6 +1669,8 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 					.append("FROM C_DocType dt, C_Order o ")
 					.append("WHERE o.C_DocTypeTarget_ID=dt.C_DocType_ID")
 					.append(" AND o.C_Order_ID=?");
+				DB.close(rs, pstmt);
+				rs = null; pstmt = null;
 				pstmt = DB.prepareStatement(sql.toString(), null);
 				pstmt.setInt(1, C_Order_ID);
 				rs = pstmt.executeQuery();
@@ -1733,6 +1808,34 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 	{
 		m_summary = summary;
 	}
+	
+	public boolean isSummary()
+	{
+		return m_summary;
+	}
+	
+	public void setLanguageID(int languageID)
+	{
+		m_language_id = languageID;
+	}
+
+	public int getLanguageID()
+	{
+		return m_language_id;
+	}
+	
+	private String reportType;
+	
+	public void setReportType(String type)
+	{
+		reportType = type;
+	}
+	
+	public String getReportType()
+	{
+		return reportType;
+	}
+	
 
 
 	/**
@@ -1819,4 +1922,5 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		}
 		return pde.getValue().toString();
 	}	//	getValueDisplay_BPLocation
+	
 }	//	ReportEngine
