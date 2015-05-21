@@ -360,9 +360,10 @@ public class Doc_AllocationHdr extends Doc
 						getC_Currency_ID(), allocationSource, null);		//	payment currency
 					if (fl != null)
 						allocationAccounted = fl.getAcctBalance();
-					if (fl != null && invoice != null)
+					if (fl != null && invoice != null){						//JPIERE-26 Modify Doc_AllocationHdr#reateFacts() by Hideaki hagiwara
 						fl.setAD_Org_ID(invoice.getAD_Org_ID());
-
+						fl.setC_BPartner_ID(invoice.getC_BPartner_ID());
+					}														//JPiere-26 Finish
 					// for Realized Gain & Loss
 					flForRGL = factForRGL.createLine (line, bpAcct,
 						getC_Currency_ID(), allocationSourceForRGL, null);		//	payment currency
