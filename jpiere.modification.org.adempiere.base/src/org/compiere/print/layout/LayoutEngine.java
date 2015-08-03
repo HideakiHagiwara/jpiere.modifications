@@ -1,14 +1,15 @@
 /******************************************************************************
- * Product: JPiere(ジェイピエール) - JPiere Modifications                     *
- * Copyright (C) Hideaki Hagiwara All Rights Reserved.                        *
- * このプログラムはGNU Gneral Public Licens Version2のもと公開しています。    *
- * このプログラムは自由に活用してもらう事を期待して公開していますが、         *
- * いかなる保証もしていません。                                               *
- * 著作権は萩原秀明(h.hagiwara@oss-erp.co.jp)が保持し、サポートサービスは     *
- * 株式会社オープンソース・イーアールピー・ソリューションズで                 *
- * 提供しています。サポートをご希望の際には、                                 *
- * 株式会社オープンソース・イーアールピー・ソリューションズまでご連絡下さい。 *
- * http://www.oss-erp.co.jp/                                                  *
+ * Product: JPiere(Japan + iDempiere)                                         *
+ * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
+ *                                                                            *
+ * This program is free software, you can redistribute it and/or modify it    *
+ * under the terms version 2 of the GNU General Public License as published   *
+ * by the Free Software Foundation. This program is distributed in the hope   *
+ * that it will be useful, but WITHOUT ANY WARRANTY.                          *
+ * See the GNU General Public License for more details.                       *
+ *                                                                            *
+ * JPiere supported by OSS ERP Solutions Co., Ltd.                            *
+ * (http://www.oss-erp.co.jp)                                                 *
  *****************************************************************************/
 
 package org.compiere.print.layout;
@@ -37,6 +38,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -224,6 +226,8 @@ public class LayoutEngine implements Pageable, Printable, Doc
 	public static Image			IMAGE_FALSE = null;
 	/** Image Size				*/
 	public static Dimension		IMAGE_SIZE = new Dimension(10,10);
+
+	public Boolean[] colSuppressRepeats;
 
 	static {
 		Toolkit tk = Toolkit.getDefaultToolkit();
@@ -1011,7 +1015,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 			m_data.setRowIndex(row);
 			if (row > 0)
 				newPage(true, false); // break page per record when the report is a form
-			
+
 			boolean somethingPrinted = true;	//	prevent NL of nothing printed and supress null
 			//	for every item
 			for (int i = 0; i < m_format.getItemCount(); i++)
@@ -1612,7 +1616,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		int[] columnMaxWidth = new int[columnCount];
 		int[] columnMaxHeight = new int[columnCount];
 		boolean[] fixedWidth = new boolean [columnCount];
-		boolean[] colSuppressRepeats = new boolean[columnCount];
+		colSuppressRepeats = new Boolean[columnCount];
 		String[] columnJustification = new String[columnCount];
 		HashMap<Integer,Integer> additionalLines = new HashMap<Integer,Integer>();
 
@@ -1993,6 +1997,20 @@ public class LayoutEngine implements Pageable, Printable, Doc
 	{
 		return  m_PrintInfo;
 	}
+
+	public static Boolean [] getColSuppressRepeats (MPrintFormat format){
+		List<Boolean> colSuppressRepeats = new ArrayList<>();
+		for (int c = 0; c < format.getItemCount(); c++)
+		{
+			MPrintFormatItem item = format.getItem(c);
+			if (item.isPrinted())
+			{
+				colSuppressRepeats.add(item.isSuppressRepeats());
+			}
+		}
+		return colSuppressRepeats.toArray(new Boolean[0]);
+	}
+
 
 	/**
 	 * Get C_Currency_ID
