@@ -1,5 +1,5 @@
 /******************************************************************************
- * Product: JPiere(Japan + iDempiere)                                         *
+ * Product: JPiere                                                            *
  * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
  *                                                                            *
  * This program is free software, you can redistribute it and/or modify it    *
@@ -8,7 +8,7 @@
  * that it will be useful, but WITHOUT ANY WARRANTY.                          *
  * See the GNU General Public License for more details.                       *
  *                                                                            *
- * JPiere supported by OSS ERP Solutions Co., Ltd.                            *
+ * JPiere is maintained by OSS ERP Solutions Co., Ltd.                        *
  * (http://www.oss-erp.co.jp)                                                 *
  *****************************************************************************/
 package org.compiere.print.layout;
@@ -1295,7 +1295,7 @@ public class TableElement extends PrintElement
 		float netWidth = colWidth - (2*H_GAP) - m_tFormat.getVLineStroke().floatValue();
 		if (leftVline)
 			netWidth -= m_tFormat.getVLineStroke().floatValue();
-		int rowHeight = m_headerHeight;	//JPIERE ing - float
+		int rowHeight = m_headerHeight;	//JPIERE int - float
 		float netHeight = rowHeight - (4*m_tFormat.getLineStroke().floatValue()) + (2*V_GAP);
 
 		if (DEBUG_PRINT)

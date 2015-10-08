@@ -1,5 +1,5 @@
 /******************************************************************************
- * Product: JPiere(Japan + iDempiere)                                         *
+ * Product: JPiere                                                            *
  * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
  *                                                                            *
  * This program is free software, you can redistribute it and/or modify it    *
@@ -8,13 +8,13 @@
  * that it will be useful, but WITHOUT ANY WARRANTY.                          *
  * See the GNU General Public License for more details.                       *
  *                                                                            *
- * JPiere supported by OSS ERP Solutions Co., Ltd.                            *
+ * JPiere is maintained by OSS ERP Solutions Co., Ltd.                        *
  * (http://www.oss-erp.co.jp)                                                 *
  *****************************************************************************/
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.TABLE_AD_TABLE;
+import static org.compiere.model.SystemIDs.*;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -214,7 +214,7 @@ public class ReportEngine implements PrintServiceAttributeListener
 	private int m_language_id = 0;
 
 	private boolean m_summary = false;
-	
+
 	/**
 	 * store all column has same css rule into a list
 	 * for IDEMPIERE-2640
@@ -589,7 +589,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 	{
 		return createHTML(writer, onlyTable, language, null);
 	}
-	
+
 	/**
 	 * 	Write HTML to writer with isExport = false
 	 * 	@param writer writer
@@ -629,7 +629,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 
 			thead thead = new thead();
 			tbody tbody = new tbody();
-			
+
 			Boolean [] colSuppressRepeats = m_layout == null ? LayoutEngine.getColSuppressRepeats(m_printFormat):m_layout.colSuppressRepeats;
 			Object [] preValues = new Object [colSuppressRepeats.length];
 			int printColIndex = -1;
@@ -697,7 +697,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 							{
 								PrintDataElement pde = (PrintDataElement) obj;
 								String value = pde.getValueDisplay(language);	//	formatted
-								
+
 								//JPIERE-3 Modify ReportEngine#createHTML by Hideaki Hagiwara
 								if(pde.getDisplayType()==DisplayType.Amount || pde.getDisplayType() == DisplayType.CostPrice)
 								{
@@ -705,7 +705,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 								}else{
 									value = pde.getValueDisplay(language);
 								}//JPiere-3 Finish
-								 
+
 								if (colSuppressRepeats[printColIndex]){
 									if (value.equals(preValues[printColIndex])){
 										td.addElement("&nbsp;");
@@ -785,7 +785,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 								//just run with on record
 								if (row == 0)
 									addCssInfo(item, col);
-							
+
 							}
 							else if (obj instanceof PrintData)
 							{
@@ -797,7 +797,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 					}	//	printed
 				}	//	for all columns
 			}	//	for all rows
-								
+
 			if (onlyTable)
 				table.output(w);
 			else
@@ -817,7 +817,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 				    for (String styleLine : styleLines){
 				    	styleBuild.append(styleLine);
 				    }
-				    
+
 				    appendInlineCss (doc, styleBuild);
 				}
 				if (extension != null && extension.getScriptURL() != null && !isExport)
@@ -827,17 +827,17 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 					jslink.setSrc(extension.getScriptURL());
 					doc.appendHead(jslink);
 				}
-				
+
 				if (extension != null && !isExport){
 					extension.setWebAttribute(doc.getBody());
 				}
-				
+
 				doc.output(w);
 			}
-			
+
 			thead.output(w);
 			tbody.output(w);
-			
+
 			w.println();
 			w.println("</table>");
 			if (!onlyTable)
@@ -959,7 +959,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 										data = pde.getValueDisplay(language);
 									}
 								}					//JPiere-3 Finish
-								
+
 								if (colSuppressRepeats[printColIndex]){
 									if (data.equals(preValues[printColIndex])){
 										continue;
@@ -1870,31 +1870,31 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 	{
 		return reportType;
 	}
-	
+
 	/**
 	 * build css for table from mapCssInfo
 	 * @param doc
 	 */
 	public void appendInlineCss (XhtmlDocument doc){
 		StringBuilder buildCssInline = new StringBuilder();
-		
+
 		// each entry is a css class
 		for (Entry<CSSInfo, List<ColumnInfo>> cssClassInfo : mapCssInfo.entrySet()){
 			// each column is a css name.
 			for (int i = 0; i < cssClassInfo.getValue().size(); i++){
 				if (i > 0)
 					buildCssInline.append (",");
-				
+
 				buildCssInline.append(cssClassInfo.getValue().get(i).getCssSelector());
 			}
-			
+
 			buildCssInline.append(cssClassInfo.getKey().getCssRule());
 			buildCssInline.append("\n");
 		}
-		
+
 		appendInlineCss (doc, buildCssInline);
 	}
-	
+
 	public void appendInlineCss (XhtmlDocument doc, StringBuilder buildCssInline){
 		if (buildCssInline.length() > 0){
 			buildCssInline.insert(0, "<style>");
@@ -1902,7 +1902,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			doc.appendHead(buildCssInline.toString());
 		}
 	}
-	
+
 	/**
 	 * create css info from formatItem, add all column has same formatItem in a list
 	 * @param formatItem
@@ -1918,35 +1918,35 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			mapCssInfo.put(cadidateCss, newColumnList);
 		}
 	}
-	
+
 	/**
 	 * Store info for make css rule
 	 * @author hieplq
 	 *
 	 */
 	public class CSSInfo {
-		private Font font;		
+		private Font font;
 		private Color color;
 		private String cssStr;
 		public CSSInfo (MPrintFormatItem item){
 			MPrintFont mPrintFont = null;
 			I_AD_PrintFormat m_printFormat = item.getAD_PrintFormat();
-			
-			if (item.getAD_PrintFont_ID() > 0) 
+
+			if (item.getAD_PrintFont_ID() > 0)
 			{
 				mPrintFont = MPrintFont.get(item.getAD_PrintFont_ID());
-			}			
+			}
 			else if (m_printFormat.getAD_PrintFont_ID() > 0)
 			{
 				mPrintFont = MPrintFont.get(m_printFormat.getAD_PrintFont_ID());
 			}
 			if (mPrintFont != null && mPrintFont.getAD_PrintFont_ID() > 0)
 			{
-				font = mPrintFont.getFont();				
+				font = mPrintFont.getFont();
 			}
-			
+
 			MPrintColor mPrintColor = null;
-			if (item.getAD_PrintColor_ID() > 0) 
+			if (item.getAD_PrintColor_ID() > 0)
 			{
 				mPrintColor = MPrintColor.get(m_ctx, item.getAD_PrintColor_ID());
 			}
@@ -1957,10 +1957,10 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			if (mPrintColor != null && mPrintColor.getAD_PrintColor_ID() > 0)
 			{
 				color = mPrintColor.getColor();
-				
+
 			}
 		}
-		
+
 		/**
 		 * sum hashCode of partial
 		 */
@@ -1968,7 +1968,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		public int hashCode() {
 			return (color == null ? 0 : color.hashCode()) + (font == null ? 0 : font.hashCode());
 		}
-		
+
 		/**
 		 * equal only when same color and font
 		 */
@@ -1976,12 +1976,12 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		public boolean equals(Object obj) {
 			if (obj == null || !(obj instanceof CSSInfo) || obj.hashCode() != this.hashCode())
 				return false;
-			
+
 			CSSInfo compareObj = (CSSInfo)obj;
-			
-			return compareObj (compareObj.color, color) && compareObj (compareObj.font, font);			
+
+			return compareObj (compareObj.color, color) && compareObj (compareObj.font, font);
 		}
-		
+
 		/**
 		 * compare two object equal when both is null or result of equal
 		 * @param obj1
@@ -1991,14 +1991,14 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		protected boolean compareObj(Object obj1, Object obj2) {
 			if (obj1 == null && obj2 != null)
 				return false;
-			
+
 			if (obj1 == null && obj2 == null){
 				return true;
 			}
-			
+
 			return obj1.equals(obj2);
 		}
-		
+
 		/**
 		 * append a css rule to css class
 		 * @param cssBuild
@@ -2011,7 +2011,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			cssBuild.append (ruleValue);
 			cssBuild.append (";");
 		}
-		
+
 		/**
 		 * build css rule
 		 * @return
@@ -2019,36 +2019,36 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		public String getCssRule (){
 			if (cssStr != null)
 				return cssStr;
-			
+
 			StringBuilder cssBuild = new StringBuilder();
 			cssBuild.append ("{");
-			
+
 			if (font != null){
-				
+
 				String fontFamily = font.getFamily();
 				fontFamily = getCSSFontFamily(fontFamily);
 				if (fontFamily != null){
 					addCssRule(cssBuild, "font-family", fontFamily);
 				}
-				
+
 				if (font.isBold())
 				{
-					addCssRule(cssBuild, "font-weight", "bold");					
+					addCssRule(cssBuild, "font-weight", "bold");
 				}
-				
+
 				if (font.isItalic())
 				{
 					addCssRule(cssBuild, "font-style", "italic");
-				}									
-				
+				}
+
 				int size = font.getSize();
 				addCssRule(cssBuild, "font-size", size + "pt");
 			}
-			
+
 			if (color != null)
 			{
 				cssBuild.append("color:rgb(");
-				cssBuild.append(color.getRed()); 
+				cssBuild.append(color.getRed());
 				cssBuild.append(",");
 				cssBuild.append(color.getGreen());
 				cssBuild.append(",");
@@ -2057,11 +2057,11 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			}
 			cssBuild.append ("}");
 			cssStr = cssBuild.toString();
-			
+
 			return cssStr;
 		}
 	}
-	
+
 	/**
 	 * store info of report column,
 	 * now just use index to create css selector, but for later maybe will construct a complex class name
@@ -2073,9 +2073,9 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		int index = -1;
 		public ColumnInfo (int index, MPrintFormatItem formatItem){
 			this.index = index;
-			
+
 		}
-		
+
 		public String getCssSelector(){
 			return String.format(CSS_SELECTOR_TEMPLATE, index + 1);
 		}
