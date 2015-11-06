@@ -1374,7 +1374,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		}
 
 		//	Convert DataElement to String
-		PrintDataElement data = (PrintDataElement)obj;//JPIERE-3 Modify LayoutEngine#createFiledElement by Hideaki Hagiwara
+		PrintDataElement data = (PrintDataElement)obj;//JPIERE-0003 Modify LayoutEngine#createFiledElement by Hideaki Hagiwara
 		if (data.isNull() && item.isSuppressNull())
 			return null;
 
@@ -1385,7 +1385,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		}else{
 			stringContent = data.getValueDisplay (m_format.getLanguage());
 		}
-													//JPiere-3-1 Finish
+													//JPiere-0003-1 Finish
 		if ((stringContent == null || stringContent.length() == 0) && item.isSuppressNull())
 			return null;
 		//	non-string
@@ -1616,7 +1616,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		int[] columnMaxWidth = new int[columnCount];
 		int[] columnMaxHeight = new int[columnCount];
 		boolean[] fixedWidth = new boolean [columnCount];
-		colSuppressRepeats = new Boolean[columnCount];
+		Boolean [] colSuppressRepeats = new Boolean[columnCount];
 		String[] columnJustification = new String[columnCount];
 		HashMap<Integer,Integer> additionalLines = new HashMap<Integer,Integer>();
 
@@ -1754,7 +1754,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 							if (pde.isID() || pde.isYesNo())
 								dataElement = (Serializable) pde.getValue();
 							else
-							{				//JPIERE-3 Modify LayoutEngine#layoutTable by Hideaki Hagiwara
+							{				//JPIERE-0003 Modify LayoutEngine#layoutTable by Hideaki Hagiwara
 								if(pde.getDisplayType()==DisplayType.Amount || pde.getDisplayType()==DisplayType.CostPrice)
 								{
 									int C_Currency_ID = getC_Currency_ID(printData);
@@ -1769,7 +1769,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 								}
 							}
 
-						}				//JPiere-3-2 Finish
+						}				//JPiere-0003-2 Finish
 						else
 							log.log(Level.SEVERE, "Element not PrintDataElement " + obj.getClass());
 						columnElement = dataElement;
@@ -1805,6 +1805,9 @@ public class LayoutEngine implements Pageable, Printable, Doc
 		table.layout(0,0,false, MPrintFormatItem.FIELDALIGNMENTTYPE_LeadingLeft);
 		if (m_tableElement == null)
 			m_tableElement = table;
+		
+		if (format == m_format)
+			this.colSuppressRepeats = colSuppressRepeats;
 		return table;
 	}	//	layoutTable
 
@@ -2014,7 +2017,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 
 	/**
 	 * Get C_Currency_ID
-	 * JPIERE-3 Add LayoutEngine#getC_Currency_ID()
+	 * JPIERE-0003 Add LayoutEngine#getC_Currency_ID()
 	 *
 	 * @author Hideaki Hagiwara
 	 */
@@ -2043,7 +2046,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 
 	/**
 	 * Get Display Value
-	 * JPIERE-3 Add LayoutEngine#getValueDisplay()
+	 * JPIERE-0003 Add LayoutEngine#getValueDisplay()
 	 *
 	 * @author Hideaki Hagiwara
 	 */
@@ -2076,7 +2079,7 @@ public class LayoutEngine implements Pageable, Printable, Doc
 
 	/**
 	 * Get Value Displapay BPLocation
-	 * JPIERE-3 Add LayoutEngine#getValueDisplay_BPLocation()
+	 * JPIERE-0003 Add LayoutEngine#getValueDisplay_BPLocation()
 	 * @author Hideaki Hagiwara
 	 */
 	private String getValueDisplay_BPLocation ( PrintDataElement pde)

@@ -433,7 +433,10 @@ public class TableElement extends PrintElement
 						String[] lines = Pattern.compile("\n", Pattern.MULTILINE).split(string);
 						for (int lineNo = 0; lineNo < lines.length; lineNo++)
 						{
-							AttributedString aString = new AttributedString(lines[lineNo]);
+							String str = lines[lineNo];
+							if (str.length() == 0)
+								str = " ";
+							AttributedString aString = new AttributedString(str);
 							aString.addAttribute(TextAttribute.FONT, font);
 							AttributedCharacterIterator iter = aString.getIterator();
 							LineBreakMeasurer measurer = new LineBreakMeasurer(iter, frc);
@@ -475,9 +478,9 @@ public class TableElement extends PrintElement
 				string = m_columnHeader[dataCol].toString();
 
 			//	Print below existing column
-//			if (col != dataCol)									//JPIERE-4-1 Modify TableElement#calculateSize() by Hideaki Hagiwara
+//			if (col != dataCol)									//JPIERE-0004-1 Modify TableElement#calculateSize() by Hideaki Hagiwara
 //				headerSizes[dataCol] = new Dimension2DImpl();
-//			else 												//JPiere-4-1 Finish
+//			else 												//JPiere-0004-1 Finish
 			if (colWidth == 0 && m_columnMaxWidth[dataCol] < 0		//	suppress Null
 					|| string.length() == 0)
 				headerSizes[dataCol] = new Dimension2DImpl();
@@ -528,7 +531,7 @@ public class TableElement extends PrintElement
 					headerSizes[dataCol] = new Dimension2DImpl(colWidth, height);
 				}
 
-				//JPIERE-4-2 Modify TableElement#calculateSize() by Hideaki Hagiwara
+				//JPIERE-0004-2 Modify TableElement#calculateSize() by Hideaki Hagiwara
 				if( col != dataCol && m_multiLineHeader){
 					double width = headerSizes[col].getWidth();
 					if( width < headerSizes[dataCol].getWidth())
@@ -537,7 +540,7 @@ public class TableElement extends PrintElement
 					headerSizes[col] = new Dimension2DImpl(width, height);
 					headerSizes[dataCol] = new Dimension2DImpl();
 				}
-				//JPiere-4-2 finish
+				//JPiere-0004-2 finish
 
 			}	//	headerSize
 			headerSizes[dataCol].roundUp();
@@ -1295,7 +1298,7 @@ public class TableElement extends PrintElement
 		float netWidth = colWidth - (2*H_GAP) - m_tFormat.getVLineStroke().floatValue();
 		if (leftVline)
 			netWidth -= m_tFormat.getVLineStroke().floatValue();
-		int rowHeight = m_headerHeight;	//JPIERE int - float
+		float rowHeight = m_headerHeight;
 		float netHeight = rowHeight - (4*m_tFormat.getLineStroke().floatValue()) + (2*V_GAP);
 
 		if (DEBUG_PRINT)
@@ -1334,7 +1337,7 @@ public class TableElement extends PrintElement
 		}
 
 
-//		int tempCurY = curY;	//JPIERE-4-3 Modify TableElement#printColumn() by Hideaki Hagiwara
+//		int tempCurY = curY;	//JPIERE-0004-3 Modify TableElement#printColumn() by Hideaki Hagiwara
 		curX += H_GAP;		//	upper left gap
 		curY += V_GAP;
 		//	Header
@@ -1343,7 +1346,7 @@ public class TableElement extends PrintElement
 		LineBreakMeasurer measurer = null;
 		float usedHeight = 0;
 
-		//JPIERE-4-4 Modify TableElement#printColumn() by Hideaki Hagiwara
+		//JPIERE-0004-4 Modify TableElement#printColumn() by Hideaki Hagiwara
 		//Calculate header height
 		Integer[] cols = getPrintHeaderCol(  col );
 		for (int i=0; i<cols.length; i++ )
@@ -1403,10 +1406,10 @@ public class TableElement extends PrintElement
 
 		curX += netWidth + H_GAP;
 		curY += V_GAP;
-		int max_curY = origY + rowHeight - V_GAP - m_tFormat.getLineStroke().intValue();
+		int max_curY = origY + (int)rowHeight - V_GAP - m_tFormat.getLineStroke().intValue();
 		if( max_curY > curY )
 		curY = max_curY;
-		//JPIERE-4-4 Finish
+		//JPIERE-0004-4 Finish
 
 		//	Y end line
 		g2D.setPaint(m_tFormat.getVLine_Color());
@@ -1725,7 +1728,7 @@ public class TableElement extends PrintElement
 
 	/**
 	 * Get Print Header Column for multi
-	 * JPIERE-4 Add TableElement#getPrintHeaderCol()
+	 * JPIERE-0004 Add TableElement#getPrintHeaderCol()
 	 *
 	 * @param int col
 	 * @return Integer[]
