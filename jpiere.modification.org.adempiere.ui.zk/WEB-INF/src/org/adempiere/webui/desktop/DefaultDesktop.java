@@ -955,7 +955,8 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 					ADForm form = factory.newFormInstance(Zoom_Window_ID, query);
 					if(form != null)
 					{
-						if (Window.Mode.EMBEDDED == form.getWindowMode()) {
+						if (Window.Mode.EMBEDDED == form.getWindowMode())
+						{
 							DesktopTabpanel tabPanel = new DesktopTabpanel();
 							form.setParent(tabPanel);
 							//do not show window title when open as tab
@@ -965,6 +966,7 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 								WindowTabTitleMap.put(AD_Window_ID, MWindow.get(Env.getCtx(), AD_Window_ID).get_Translation("Name"));
 							windowContainer.addWindow(tabPanel, WindowTabTitleMap.get(AD_Window_ID), true, null);
 							form.focus();
+							return;
 						} else {
 //							form.setAttribute(Window.MODE_KEY, form.getWindowMode());
 //							showWindow(form);
@@ -974,8 +976,6 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 				}//for
 
 			}//if (factories != null)
-
-			return;
 		}
 
 		super.showZoomWindow(AD_Window_ID, query);
