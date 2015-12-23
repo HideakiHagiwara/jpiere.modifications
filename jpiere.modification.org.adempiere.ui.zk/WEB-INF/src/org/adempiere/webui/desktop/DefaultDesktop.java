@@ -18,10 +18,14 @@
 package org.adempiere.webui.desktop;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.adempiere.base.Service;
 import org.adempiere.base.event.EventManager;
 import org.adempiere.base.event.IEventManager;
 import org.adempiere.base.event.IEventTopics;
@@ -35,6 +39,7 @@ import org.adempiere.webui.apps.BusyDialog;
 import org.adempiere.webui.apps.DesktopRunnable;
 import org.adempiere.webui.apps.ProcessDialog;
 import org.adempiere.webui.apps.WReport;
+import org.adempiere.webui.component.DesktopTabpanel;
 import org.adempiere.webui.component.Tab;
 import org.adempiere.webui.component.Tabpanel;
 import org.adempiere.webui.component.ToolBar;
@@ -44,6 +49,7 @@ import org.adempiere.webui.event.DrillEvent;
 import org.adempiere.webui.event.MenuListener;
 import org.adempiere.webui.event.ZKBroadCastManager;
 import org.adempiere.webui.event.ZoomEvent;
+import org.adempiere.webui.factory.IFormWindowZoomFactory;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.BroadcastMessageWindow;
 import org.adempiere.webui.panel.HeaderPanel;
@@ -64,10 +70,11 @@ import org.compiere.model.MPreference;
 import org.compiere.model.MQuery;
 import org.compiere.model.MRole;
 import org.compiere.model.MTable;
+import org.compiere.model.MWindow;
 import org.compiere.model.Query;
-import org.compiere.model.SystemIDs;
 import org.compiere.model.X_AD_CtxHelp;
 import org.compiere.util.CLogger;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
@@ -169,6 +176,33 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 
     	EventQueue<Event> queue = EventQueues.lookup(ACTIVITIES_EVENT_QUEUE, true);
     	queue.subscribe(this);
+
+    	//JPIERE-0139:Zoom to Form Window - start
+    	if(MTable.getTable_ID("JP_FormWindowZoom")== 0)
+    		return ;
+
+		String sql = "SELECT AD_Window_ID, JP_ZoomWindow_ID FROM JP_FormWindowZoom WHERE IsActive='Y'";
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try
+		{
+			pstmt = DB.prepareStatement(sql, null);
+			rs = pstmt.executeQuery();
+			while (rs.next())
+				fromWindowToFormMap.put(rs.getInt(1), rs.getInt(2));
+		}
+		catch (Exception e)
+		{
+//				log.log(Level.SEVERE, sql, e);
+		}
+		finally
+		{
+			DB.close(rs, pstmt);
+			rs = null;
+			pstmt = null;
+		}
+		//JPiere-0139:Zoom to Form Window - finish
+
     }
 
     @SuppressWarnings("serial")
@@ -805,13 +839,13 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 		unbindEventManager();
 	}
 
+	//JPIERE-0120:
 	@Override
 	public void updateHelpContext(String ctxType, int recordId) {
 		// don't show context for SetupWizard Form, is managed internally using wf and node ctxhelp
-		if (recordId == SystemIDs.FORM_SETUP_WIZARD && X_AD_CtxHelp.CTXTYPE_Form.equals(ctxType))
-			return;
+//		if (recordId == SystemIDs.FORM_SETUP_WIZARD && X_AD_CtxHelp.CTXTYPE_Form.equals(ctxType))
+//			return;
 
-		//JPIERE-0120:
 //		Clients.response(new AuScript("zWatch.fire('onFieldTooltip', this);"));
 //		helpController.renderCtxHelp(ctxType, recordId);
 //
@@ -897,5 +931,55 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 		}
 	}
 
+	//JPIERE-0139:Zoom to Form Window
+	HashMap<Integer, Integer> fromWindowToFormMap = new HashMap<Integer, Integer>();
+	HashMap<Integer, String> WindowTabTitleMap = new HashMap<Integer, String>();
+
+	/**
+	 * JPIERE-0139 Zoom to Form Window
+	 *
+	 */
+	@Override
+	public void showZoomWindow(int AD_Window_ID, MQuery query) {
+
+		if(fromWindowToFormMap.size() > 0 && fromWindowToFormMap.containsKey(AD_Window_ID))
+		{
+			int Zoom_Window_ID = ((Integer)fromWindowToFormMap.get(AD_Window_ID)).intValue();
+
+			//Zoom to Form Window
+			List<IFormWindowZoomFactory> factories = Service.locator().list(IFormWindowZoomFactory.class).getServices();
+			if (factories != null)
+			{
+				for(IFormWindowZoomFactory factory : factories)
+				{
+					ADForm form = factory.newFormInstance(Zoom_Window_ID, query);
+					if(form != null)
+					{
+						if (Window.Mode.EMBEDDED == form.getWindowMode()) {
+							DesktopTabpanel tabPanel = new DesktopTabpanel();
+							form.setParent(tabPanel);
+							//do not show window title when open as tab
+							form.setTitle(null);
+							preOpenNewTab();
+							if(!WindowTabTitleMap.containsKey(AD_Window_ID))
+								WindowTabTitleMap.put(AD_Window_ID, MWindow.get(Env.getCtx(), AD_Window_ID).get_Translation("Name"));
+							windowContainer.addWindow(tabPanel, WindowTabTitleMap.get(AD_Window_ID), true, null);
+							form.focus();
+						} else {
+//							form.setAttribute(Window.MODE_KEY, form.getWindowMode());
+//							showWindow(form);
+						}
+					}
+
+				}//for
+
+			}//if (factories != null)
+
+			return;
+		}
+
+		super.showZoomWindow(AD_Window_ID, query);
+
+	}//showZoomWindow
 
 }
