@@ -1,0 +1,77 @@
+-- Table: adempiere.jp_formwindowzoom
+
+
+-- DROP TABLE adempiere.jp_formwindowzoom;
+
+
+
+CREATE TABLE adempiere.jp_formwindowzoom
+(
+  
+	ad_client_id numeric(10,0) NOT NULL DEFAULT 0,
+  
+	ad_org_id numeric(10,0) NOT NULL DEFAULT 0::numeric,
+  
+	isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
+  
+	created timestamp without time zone DEFAULT statement_timestamp(),
+  
+	updated timestamp without time zone DEFAULT statement_timestamp(),
+ 
+	updatedby numeric(10,0) NOT NULL DEFAULT NULL::numeric,
+  
+	createdby numeric(10,0) NOT NULL,
+  
+	ad_window_id numeric(10,0) NOT NULL,
+  
+	ad_form_id numeric(10,0),
+  
+	jp_formwindowzoom_id numeric(10,0) NOT NULL,
+  
+	description character varying(255) DEFAULT NULL::character varying,
+  
+	jp_zoomwindow_id numeric(10,0) NOT NULL DEFAULT 1000000::numeric,
+  
+	
+	CONSTRAINT jp_formwindowzoom_key PRIMARY KEY (jp_formwindowzoom_id),
+  
+	CONSTRAINT adform_jpformwindowzoom FOREIGN KEY (ad_form_id)
+ REFERENCES adempiere.ad_form (ad_form_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  
+	CONSTRAINT adwindow_jpformwindowzoom FOREIGN KEY (ad_window_id)
+ REFERENCES adempiere.ad_window (ad_window_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  
+	CONSTRAINT jpzoomwindow_jpformwindowzoom FOREIGN KEY (jp_zoomwindow_id)
+ REFERENCES adempiere.ad_window (ad_window_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+  
+        CONSTRAINT jp_formwindowzoom_isactive_check CHECK (isactive = ANY (ARRAY['Y'::bpchar, 'N'::bpchar]))
+
+)
+
+
+WITH (
+  OIDS=FALSE
+);
+
+
+ALTER TABLE adempiere.jp_formwindowzoom
+  OWNER TO adempiere;
+
+
+
+
+-- Index: adempiere.jp_formwindowzoom_window
+
+
+-- DROP INDEX adempiere.jp_formwindowzoom_window;
+
+
+
+CREATE UNIQUE INDEX jp_formwindowzoom_window
+  ON adempiere.jp_formwindowzoom
+  USING btree
+  (ad_client_id, ad_window_id);
+
