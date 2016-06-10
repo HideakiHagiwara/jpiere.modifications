@@ -305,11 +305,13 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     	//JPIERE-0181 : Start
     	if(whereExtended != null && whereExtended.contains(m_tableName+"_ID = 0"))//Window of New Record only
     	{
+    		m_total = 0;
     		return false;
     		
     	}else if(MTable.get(m_findCtx, findFields[0].getGridTab().getAD_Table_ID()).isHighVolume() //High Volumne Table
     			|| findFields[0].getGridTab().getGridWindow().getWindowType().equals("T")){ //Transaction Window
     		
+    		m_total = 10;
     		;//Nothing to do;
     		
     	}else{
@@ -755,7 +757,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         {
         	m_total = 0;        	
         }else{
-        	m_total = 1;
+        	m_total = 10;
         }
         //JPIERE-0181:Finish
 
