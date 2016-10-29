@@ -1,23 +1,23 @@
 /******************************************************************************
- * Product: Posterita Ajax UI 												  *
- * Copyright (C) 2007 Posterita Ltd.  All Rights Reserved.                    *
- * This program is free software; you can redistribute it and/or modify it    *
+ * Product: JPiere                                                            *
+ * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
+ *                                                                            *
+ * This program is free software, you can redistribute it and/or modify it    *
  * under the terms version 2 of the GNU General Public License as published   *
  * by the Free Software Foundation. This program is distributed in the hope   *
- * that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           *
+ * that it will be useful, but WITHOUT ANY WARRANTY.                          *
  * See the GNU General Public License for more details.                       *
- * You should have received a copy of the GNU General Public License along    *
- * with this program; if not, write to the Free Software Foundation, Inc.,    *
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
- * For the text or an alternative of this public license, you may reach us    *
- * Posterita Ltd., 3, Draper Avenue, Quatre Bornes, Mauritius                 *
- * or via info@posterita.org or http://www.posterita.org/                     *
+ *                                                                            *
+ * JPiere is maintained by OSS ERP Solutions Co., Ltd.                        *
+ * (http://www.oss-erp.co.jp)                                                 *
  *****************************************************************************/
 
 package org.adempiere.webui.desktop;
 
+import static org.compiere.model.SystemIDs.TREE_MENUPRIMARY;
+
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -66,12 +66,14 @@ import org.compiere.Adempiere;
 import org.compiere.model.GridField;
 import org.compiere.model.GridTab;
 import org.compiere.model.I_AD_Preference;
+import org.compiere.model.MMenu;
 import org.compiere.model.MPreference;
 import org.compiere.model.MQuery;
 import org.compiere.model.MRole;
 import org.compiere.model.MTable;
 import org.compiere.model.MWindow;
 import org.compiere.model.Query;
+import org.compiere.model.SystemIDs;
 import org.compiere.model.X_AD_CtxHelp;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
@@ -356,6 +358,7 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 						try {
 							ServerContext.setCurrentInstance(ctx);
 							renderHomeTab();
+							automaticOpen(ctx);
 						} finally {
 							ServerContext.dispose();
 						}
@@ -930,6 +933,70 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 			Clients.response(new AuScript(script));
 		}
 	}
+	
+	int getMenuID()
+	{
+		int AD_Role_ID = Env.getAD_Role_ID(Env.getCtx());
+		int AD_Tree_ID = DB.getSQLValue(null,
+				"SELECT COALESCE(r.AD_Tree_Menu_ID, ci.AD_Tree_Menu_ID)" 
+						+ "FROM AD_ClientInfo ci" 
+						+ " INNER JOIN AD_Role r ON (ci.AD_Client_ID=r.AD_Client_ID) "
+						+ "WHERE AD_Role_ID=?", AD_Role_ID);
+		if (AD_Tree_ID <= 0)
+			AD_Tree_ID = TREE_MENUPRIMARY;	//	Menu
+
+		return AD_Tree_ID;
+	}
+	private void automaticOpen(Properties ctx) {
+
+		StringBuilder sql = new StringBuilder("SELECT m.Action, COALESCE(m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, AD_InfoWindow_ID) ")
+		.append(" FROM AD_TreeBar tb")
+		.append(" INNER JOIN AD_Menu m ON (tb.Node_ID = m.AD_Menu_ID)")
+		.append(" WHERE tb.AD_Tree_ID = ").append(getMenuID())
+		.append(" AND tb.AD_User_ID = ").append(Env.getAD_User_ID(ctx))
+		.append(" AND tb.IsActive = 'Y' AND tb.LoginOpenSeqNo > 0")
+		.append(" ORDER BY tb.LoginOpenSeqNo");
+
+		List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql.toString());
+		if (rows != null && rows.size() > 0) {
+			for (List<Object> row : rows) {
+
+				String action = (String) row.get(0);
+				int recordID = ((BigDecimal) row.get(1)).intValue();
+
+				if (action.equals(MMenu.ACTION_Form)) {
+					Boolean access = MRole.getDefault().getFormAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openForm(recordID);
+				}
+				else if (action.equals(MMenu.ACTION_Info)) {
+					Boolean access = MRole.getDefault().getInfoAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openInfo(recordID);
+				}
+				else if (action.equals(MMenu.ACTION_Process) || action.equals(MMenu.ACTION_Report)) {
+					Boolean access = MRole.getDefault().getProcessAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openProcessDialog(recordID, DB.getSQLValueStringEx(null, "SELECT IsSOTrx FROM AD_Menu WHERE AD_Menu_ID = ?", recordID).equals("Y"));
+				}
+				else if (action.equals(MMenu.ACTION_Task)) {
+					Boolean access = MRole.getDefault().getTaskAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openTask(recordID);
+				}
+				else if (action.equals(MMenu.ACTION_Window)) {
+					Boolean access = MRole.getDefault().getWindowAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openWindow(recordID, null);
+				}
+				else if (action.equals(MMenu.ACTION_WorkFlow)) {
+					Boolean access = MRole.getDefault().getWorkflowAccess(recordID);
+					if (access != null && access)
+						SessionManager.getAppDesktop().openWorkflow(recordID);
+				}
+			}
+		}
+	}    
 
 	//JPIERE-0139:Zoom to Form Window
 	HashMap<Integer, Integer> fromWindowToFormMap = new HashMap<Integer, Integer>();

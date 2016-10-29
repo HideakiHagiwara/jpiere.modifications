@@ -1432,7 +1432,7 @@ public class TableElement extends PrintElement
 		//	paint Data		***************************************************
 		for (int row = firstRow; row < nextPageRow; row++)
 		{
-			rowHeight = ((Float)m_rowHeights.get(row)).intValue();	//	includes 2*Gaps+Line
+			rowHeight = m_rowHeights.get(row);	//	includes 2*Gaps+Line
 			netHeight = rowHeight - (2*V_GAP) - m_tFormat.getLineStroke().floatValue();
 			int rowYstart = curY;
 

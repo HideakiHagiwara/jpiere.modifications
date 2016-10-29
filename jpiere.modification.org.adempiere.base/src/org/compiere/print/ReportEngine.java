@@ -2103,7 +2103,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 	}
 	
 	public void cleanTempObj (){
-		m_layout = null;
+//		m_layout = null; //JPIERE -bug fix to IDEMPIERE - 3104
 	}
 
 	/**
