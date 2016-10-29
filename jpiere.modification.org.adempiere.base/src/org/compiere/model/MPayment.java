@@ -1942,6 +1942,16 @@ public class MPayment extends X_C_Payment
 			if (!DocAction.STATUS_InProgress.equals(status))
 				return status;
 		}
+		
+		//JPIERE-0218 -- Start
+		MDocType dt = MDocType.get(getCtx(), getC_DocType_ID());
+		if(dt.get_ValueAsBoolean("IsCompleteAfterReconciledJP"))
+		{
+			m_processMsg = Msg.getMsg(getCtx(), "JP_CanCompleteAfterReconciled");
+			if(!isReconciled())
+				return DocAction.STATUS_InProgress;
+		}//JPiere-2018 -- finish
+		
 
 		// Set the definite document number after completed (if needed)
 		setDefiniteDocumentNo();
@@ -1954,7 +1964,8 @@ public class MPayment extends X_C_Payment
 		if (!isApproved())
 			approveIt();
 		if (log.isLoggable(Level.INFO)) log.info(toString());
-
+		
+		
 		//	Charge Handling
 		boolean createdAllocationRecords = false;
 		if (getC_Charge_ID() != 0)
