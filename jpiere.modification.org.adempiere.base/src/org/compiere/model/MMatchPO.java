@@ -904,50 +904,49 @@ public class MMatchPO extends X_M_MatchPO
 	protected boolean afterSave (boolean newRecord, boolean success)
 	{
 		//perform matched qty validation
-		if (success)
-		{
-			if (getM_InOutLine_ID() > 0)
-			{
-				MInOutLine line = new MInOutLine(getCtx(), getM_InOutLine_ID(), get_TrxName());
-				BigDecimal matchedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE M_InOutLine_ID=?" , getM_InOutLine_ID());
-				if (matchedQty != null && getQty().signum() == line.getMovementQty().signum()
-						&& matchedQty.abs().compareTo(line.getMovementQty().abs()) > 0)//JPIERE-0224
-				{
-					throw new IllegalStateException("Total matched qty > movement qty. MatchedQty="+matchedQty+", MovementQty="+line.getMovementQty()+", Line="+line);
-				}
-			}
-
-			if (getC_InvoiceLine_ID() > 0)
-			{
-				MInvoiceLine line = new MInvoiceLine(getCtx(), getC_InvoiceLine_ID(), get_TrxName());
-				BigDecimal matchedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE C_InvoiceLine_ID=?" , getC_InvoiceLine_ID());
-				if (matchedQty != null  && getQty().signum() == line.getQtyInvoiced().signum()
-						&& matchedQty.abs().compareTo(line.getQtyInvoiced().abs()) > 0)//JPIERE-0224
-				{
-					throw new IllegalStateException("Total matched qty > invoiced qty. MatchedQty="+matchedQty+", InvoicedQty="+line.getQtyInvoiced()+", Line="+line);
-				}
-			}
-
-			if (getC_OrderLine_ID() > 0)
-			{
-				boolean validateOrderedQty = MSysConfig.getBooleanValue(MSysConfig.VALIDATE_MATCHING_TO_ORDERED_QTY, true, Env.getAD_Client_ID(Env.getCtx()));
-				if (validateOrderedQty)
-				{
-					MOrderLine line = new MOrderLine(getCtx(), getC_OrderLine_ID(), get_TrxName());
-					BigDecimal invoicedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE C_InvoiceLine_ID > 0 and C_OrderLine_ID=?" , getC_OrderLine_ID());
-					if (invoicedQty != null && invoicedQty.compareTo(line.getQtyOrdered()) > 0)
-					{
+		//JPIERE-0224:
+//		if (success)
+//		{
+//			if (getM_InOutLine_ID() > 0)
+//			{
+//				MInOutLine line = new MInOutLine(getCtx(), getM_InOutLine_ID(), get_TrxName());
+//				BigDecimal matchedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE M_InOutLine_ID=?" , getM_InOutLine_ID());
+//				if (matchedQty != null && matchedQty.compareTo(line.getMovementQty()) > 0)
+//				{
+//					throw new IllegalStateException("Total matched qty > movement qty. MatchedQty="+matchedQty+", MovementQty="+line.getMovementQty()+", Line="+line);
+//				}
+//			}
+//
+//			if (getC_InvoiceLine_ID() > 0)
+//			{
+//				MInvoiceLine line = new MInvoiceLine(getCtx(), getC_InvoiceLine_ID(), get_TrxName());
+//				BigDecimal matchedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE C_InvoiceLine_ID=?" , getC_InvoiceLine_ID());
+//				if (matchedQty != null && matchedQty.compareTo(line.getQtyInvoiced()) > 0)
+//				{
+//					throw new IllegalStateException("Total matched qty > invoiced qty. MatchedQty="+matchedQty+", InvoicedQty="+line.getQtyInvoiced()+", Line="+line);
+//				}
+//			}
+//
+//			if (getC_OrderLine_ID() > 0)
+//			{
+//				boolean validateOrderedQty = MSysConfig.getBooleanValue(MSysConfig.VALIDATE_MATCHING_TO_ORDERED_QTY, true, Env.getAD_Client_ID(Env.getCtx()));
+//				if (validateOrderedQty)
+//				{
+//					MOrderLine line = new MOrderLine(getCtx(), getC_OrderLine_ID(), get_TrxName());
+//					BigDecimal invoicedQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE C_InvoiceLine_ID > 0 and C_OrderLine_ID=?" , getC_OrderLine_ID());
+//					if (invoicedQty != null && invoicedQty.compareTo(line.getQtyOrdered()) > 0)
+//					{
 //						throw new IllegalStateException("Total matched invoiced qty > ordered qty. MatchedInvoicedQty="+invoicedQty+", OrderedQty="+line.getQtyOrdered()+", Line="+line);
-					}
-
-					BigDecimal deliveredQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE M_InOutLine_ID > 0 and C_OrderLine_ID=?" , getC_OrderLine_ID());
-					if (deliveredQty != null && deliveredQty.abs().compareTo(line.getQtyOrdered().abs()) > 0)//JPIERE-0024
-					{
-						throw new IllegalStateException("Total matched delivered qty > ordered qty. MatchedDeliveredQty="+deliveredQty+", OrderedQty="+line.getQtyOrdered()+", Line="+line);
-					}
-				}
-			}
-		}
+//					}
+//
+//					BigDecimal deliveredQty = DB.getSQLValueBD(get_TrxName(), "SELECT Coalesce(SUM(Qty),0) FROM M_MatchPO WHERE M_InOutLine_ID > 0 and C_OrderLine_ID=?" , getC_OrderLine_ID());
+//					if (deliveredQty != null && deliveredQty.compareTo(line.getQtyOrdered()) > 0)
+//					{
+//						throw new IllegalStateException("Total matched delivered qty > ordered qty. MatchedDeliveredQty="+deliveredQty+", OrderedQty="+line.getQtyOrdered()+", Line="+line);
+//					}
+//				}
+//			}
+//		}
 
 		//	Purchase Order Delivered/Invoiced
 		//	(Reserved in VMatch and MInOut.completeIt)
