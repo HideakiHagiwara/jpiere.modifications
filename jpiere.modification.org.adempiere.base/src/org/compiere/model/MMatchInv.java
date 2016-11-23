@@ -354,6 +354,7 @@ public class MMatchInv extends X_M_MatchInv
 		final String whereClause = MMatchInv.COLUMNNAME_M_InOutLine_ID+"=?";
 		List<MMatchInv> list = new Query(ctx, I_M_MatchInv.Table_Name, whereClause, trxName)
 		.setParameters(M_InOutLine_ID)
+		.setOrderBy(MMatchInv.COLUMNNAME_M_MatchInv_ID)//JPIERE-0226 - fixed Records order
 		.list();
 		return list.toArray (new MMatchInv[list.size()]);
 	}	//	getInOutLine
