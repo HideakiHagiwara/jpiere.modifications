@@ -14,9 +14,7 @@
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.TABLE_AD_TABLE;
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_INVENTORY;
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_MOVEMENT;
+import static org.compiere.model.SystemIDs.*;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -76,8 +74,8 @@ import org.compiere.model.MDunningRunEntry;
 import org.compiere.model.MInOut;
 import org.compiere.model.MInventory;
 import org.compiere.model.MInvoice;
-import org.compiere.model.MMovement;
 import org.compiere.model.MLocation;				//JPIERE-3 Import MLocation to ReportEngine
+import org.compiere.model.MMovement;
 import org.compiere.model.MOrder;
 import org.compiere.model.MPaySelectionCheck;
 import org.compiere.model.MProcess;
@@ -631,7 +629,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			//
 			table.setNeedClosingTag(false);
 			PrintWriter w = new PrintWriter(writer);
-			
+
 			if (onlyTable)
 				table.output(w);
 			else
@@ -662,14 +660,14 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 					jslink.setSrc(extension.getScriptURL());
 					doc.appendHead(jslink);
 				}
-				
+
 				if (extension != null && !isExport){
 					extension.setWebAttribute(doc.getBody());
 				}
-				
+
 				doc.output(w);
 			}
-			
+
 
 			thead thead = new thead();
 			tbody tbody = new tbody();
@@ -841,19 +839,19 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 						}
 					}	//	printed
 				}	//	for all columns
-				
+
 				/* output table header */
 				if (row == -1){
 					thead.output(w);
 					// output open of tbody
 					tbody.output(w);
 				}else{
-					// output row by row 
+					// output row by row
 					tr.output(w);
 				}
-				
+
 			}	//	for all rows
-			
+
 			w.println();
 			w.println("</tbody>");
 			w.println("</table>");
@@ -1626,7 +1624,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			if (rs.next())	//	first record only
 			{
 				if (type == CHECK || type == DUNNING || type == REMITTANCE
-						|| type == PROJECT || type == RFQ || type == MANUFACTURING_ORDER || type == DISTRIBUTION_ORDER 
+						|| type == PROJECT || type == RFQ || type == MANUFACTURING_ORDER || type == DISTRIBUTION_ORDER
 						|| type == INVENTORY || type == MOVEMENT)
 				{
 					AD_PrintFormat_ID = rs.getInt(1);
@@ -1643,18 +1641,18 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 					}
 					else
 						DocumentNo = rs.getString(5);
-					
-					
+
+
 					if(AD_PrintFormat_ID == 0 && type == INVENTORY){
 						MProcess process = MProcess.get(ctx, PROCESS_RPT_M_INVENTORY);
 						AD_PrintFormat_ID = process.getAD_PrintFormat_ID();
 					}
-					
+
 					if(AD_PrintFormat_ID == 0 && type == MOVEMENT){
 						MProcess process = MProcess.get(ctx, PROCESS_RPT_M_MOVEMENT);
 						AD_PrintFormat_ID = process.getAD_PrintFormat_ID();
 					}
-					
+
 				}
 				else
 				{
@@ -2100,10 +2098,6 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 
 			return cssStr;
 		}
-	}
-	
-	public void cleanTempObj (){
-//		m_layout = null; //JPIERE -bug fix to IDEMPIERE - 3104
 	}
 
 	/**
