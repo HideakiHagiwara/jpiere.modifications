@@ -13,15 +13,18 @@
  *****************************************************************************/
 package org.compiere.util;
 
+import org.compiere.model.MTable;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CacheMgt;
 
 /**
- *	JPIERE-0283
- *  Reset Cache of PostgreSQL
+ *	JPIERE-0284
+ *  Cache Count
  *
  * 	@author 	Hideaki Hagiwara
+ * 
  */
-public class CacheReset_PostgreSQL extends SvrProcess 
+public class CacheCount extends SvrProcess 
 {
 	/**
 	 *  Prepare - e.g., get Parameters.
@@ -33,13 +36,36 @@ public class CacheReset_PostgreSQL extends SvrProcess
 
 	/**
 	 *  Perform process.
-	 *  @return Message to be translated
+	 *  @return Message
 	 *  @throws Exception
 	 */
 	protected String doIt() throws java.lang.Exception
-	{
-		int count = CacheMgt.get().reset("DB_PostgreSQL_Convert_Cache");
-		return "Cache Reset - SQL of PostgreSQL #" + count;
+	{	
+		CacheMgt cacheMgt = CacheMgt.get();
+		addBufferLog(0, null, null, "Cache Count Process Log", MTable.getTable_ID("AD_PInstance"), getAD_PInstance_ID());
+		
+		int counter = 0;
+		int total = 0;
+		CacheInterface[] instances = cacheMgt.getInstancesAsArray();
+		for (CacheInterface stored : instances)
+		{
+			if (stored != null && stored instanceof CCache)
+			{
+				CCache<?, ?> cc = (CCache<?, ?>)stored;
+				if (cc.getTableName() != null)
+					addLog("Table Name : " + cc.getTableName() + " - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
+				else if(cc.getName() != null)
+					addLog("Name : " + cc.getName() + " - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
+				else
+					addLog("Null Cache - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
+				
+				total += cc.sizeNoExpire();
+				counter++;
+			}
+		}//for
+		
+		
+		return "Cache Count -> Cache Object - #" + counter + "  Total Cache - #" + total;
 	}	//	doIt
 
 }	//	CacheReset
