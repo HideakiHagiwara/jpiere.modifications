@@ -67,8 +67,14 @@ public class CacheReset_ExpireTable extends SvrProcess
 	{
 		
 		MTable table = null;
-		int counter = 0;
-		int total = 0;
+		int totalRemainCache = 0;
+		int totalDeleteCache = 0;
+		int objectCounter = 0;
+
+		int remainCachecount = 0;
+		int beforeCachecount = 0;
+		int deleteCount = 0;
+		
 		
 		if(p_AD_Table_ID == 0)
 		{
@@ -76,37 +82,99 @@ public class CacheReset_ExpireTable extends SvrProcess
 			addBufferLog(0, null, null, "Process Log - Expiere Cache Reset of Table", MTable.getTable_ID("AD_PInstance"), getAD_PInstance_ID());	
 			
 			int[] tableIDs = PO.getAllIDs("AD_Table", null, get_TrxName());
-			int count = 0;
 			for(int i = 0; i < tableIDs.length; i++)
 			{
-				count = 0;
-				table = MTable.get(getCtx(), tableIDs[i]);
-				count = cacheReset(table.getTableName());
-				total = total + count;
-				if(count > 0)
-					addLog("Now Cache #" + count + " at " +table.getTableName());
+				remainCachecount = 0;
+				beforeCachecount = 0;
+				deleteCount = 0;
 				
-				counter++;
+				table = new MTable(getCtx(), tableIDs[i], null);
+//				if(table.getTableName().equals("AD_Tab"))//ignore AD_Tab table
+//					continue;
+				
+				beforeCachecount = beforeCacheCount(table.getTableName());
+				remainCachecount = ExpireCacheReset(table.getTableName());
+				deleteCount = beforeCachecount - remainCachecount;
+				totalRemainCache = totalRemainCache + remainCachecount;
+				totalDeleteCache = totalDeleteCache + deleteCount;
+				if(remainCachecount > 0)
+					addLog("Delete Cache # " + deleteCount + " Remain Cache # " + remainCachecount + " at " + table.getTableName());
+				
+				objectCounter++;
 			}
 			
+			/**
+			 * Other object of Table
+			 */
+			//element
+			remainCachecount = 0;
+			beforeCachecount = 0;
+			beforeCachecount = beforeCacheCount("element");
+			remainCachecount = ExpireCacheReset("element");
+			deleteCount = beforeCachecount - remainCachecount;
+			totalRemainCache = totalRemainCache + remainCachecount;
+			totalDeleteCache = totalDeleteCache + deleteCount;
+			if(remainCachecount > 0)
+				addLog("Delete Cache # " + deleteCount + " Remain Cache # " + remainCachecount + " at element");
+			
+			//po_trl
+			remainCachecount = 0;
+			beforeCachecount = 0;
+			beforeCachecount = beforeCacheCount("po_trl");
+			remainCachecount = ExpireCacheReset("po_trl");
+			deleteCount = beforeCachecount - remainCachecount;
+			totalRemainCache = totalRemainCache + remainCachecount;
+			totalDeleteCache = totalDeleteCache + deleteCount;
+			if(remainCachecount > 0)
+				addLog("Delete Cache # " + deleteCount + " Remain Cache # " + remainCachecount + " at element");
 			
 		}else{
-			 table = MTable.get(getCtx(), p_AD_Table_ID);
-			 int count =cacheReset(table.getTableName());
-			String msg = "Now Cache #" + count + " at " +table.getTableName();
+			table = MTable.get(getCtx(), p_AD_Table_ID);
+			beforeCachecount = beforeCacheCount(table.getTableName());
+			remainCachecount = ExpireCacheReset(table.getTableName());
+			String msg = "Delete Cache # " + (beforeCachecount - remainCachecount) + " Remain Cache # " + remainCachecount + " at " + table.getTableName();
 			addBufferLog(0, null, null, msg, MTable.getTable_ID("AD_PInstance"), getAD_PInstance_ID());		 
 		}
 		
 		
-		return "Cache Count -> Total Cache  #" + total + " /  Table Object  #" + counter;
+		return "Total Delete Cache # "+totalDeleteCache +"  Total Remain Cache  # " + totalRemainCache + " /  Table Object  # " + objectCounter;
 	}	//	doIt
 	
-	private int cacheReset(String tableName)
+	private int ExpireCacheReset(String tableName)
 	{
 		IServiceHolder<IClusterService> holder = Service.locator().locate(IClusterService.class);
 		IClusterService service = holder.getService();
 		if (service != null) {			
 			ResetExpireCacheCallable callable = new ResetExpireCacheCallable(tableName);
+			Map<IClusterMember, Future<Integer>> futureMap = service.execute(callable, service.getMembers());
+			if (futureMap != null) {
+				int total = 0;
+				try {
+					Collection<Future<Integer>> results = futureMap.values();
+					for(Future<Integer> future : results) {						
+						Integer i = future.get();
+						total += i.intValue();
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+				return total;
+			} else {
+				return 0;
+			}
+		} else {
+			return 0;
+		}
+	}
+	
+	private int beforeCacheCount(String tableName)
+	{
+		IServiceHolder<IClusterService> holder = Service.locator().locate(IClusterService.class);
+		IClusterService service = holder.getService();
+		if (service != null) {			
+			CacheCountCallable callable = new CacheCountCallable(tableName);
 			Map<IClusterMember, Future<Integer>> futureMap = service.execute(callable, service.getMembers());
 			if (futureMap != null) {
 				int total = 0;

@@ -67,23 +67,42 @@ public class CacheReset_Table extends SvrProcess
 	{
 		
 		MTable table = null;
+		int counter = 0;
+		int total = 0;
+		
 		
 		if(p_AD_Table_ID == 0)
 		{
 			
-			addBufferLog(0, null, null, "Cache Reset of Table", MTable.getTable_ID("AD_PInstance"), getAD_PInstance_ID());	
+			addBufferLog(0, null, null, "Process Log - Cache Reset of Table", MTable.getTable_ID("AD_PInstance"), getAD_PInstance_ID());	
 			
 			int[] tableIDs = PO.getAllIDs("AD_Table", null, get_TrxName());
 			int count = 0;
 			for(int i = 0; i < tableIDs.length; i++)
 			{
 				count = 0;
-				table = MTable.get(getCtx(), tableIDs[i]);
+				table = new MTable(getCtx(), tableIDs[i] ,null);
 				count = cacheReset(table.getTableName());
+				total = total + count;
 				if(count > 0)
-					addLog("Table Name : " + table.getTableName() + " - #" + count);
+					addLog("Reset Cache - #" + count + " at Table Name : " + table.getTableName());
+				
+				counter++;
 			}
 			
+			
+			/**
+			 * 
+			 */
+			count = cacheReset("element");
+			total = total + count;
+			if(count > 0)
+				addLog("Reset Cache - #" + count + " at Table Name : " + "element");
+			
+			count = cacheReset("po_trl");
+			total = total + count;
+			if(count > 0)
+				addLog("Reset Cache - #" + count + " at Table Name : " + "po_trl");
 			
 		}else{
 			 table = MTable.get(getCtx(), p_AD_Table_ID);
@@ -93,7 +112,7 @@ public class CacheReset_Table extends SvrProcess
 		}
 		
 		
-		return Msg.getMsg(getCtx(), "Success");
+		return "Cache Count -> Total Cache  #" + total + " /  Table Object  #" + counter;
 	}	//	doIt
 	
 	private int cacheReset(String tableName)

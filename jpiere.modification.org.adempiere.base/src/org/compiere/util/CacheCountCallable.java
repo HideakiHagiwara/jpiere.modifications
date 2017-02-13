@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
  * @author hengsin
  *
  */
-public class ResetExpireCacheCallable implements Callable<Integer>, Serializable 
+public class CacheCountCallable implements Callable<Integer>, Serializable 
 {
 
 	/**
@@ -31,7 +31,7 @@ public class ResetExpireCacheCallable implements Callable<Integer>, Serializable
 	
 	private String tableName;
 	
-	protected ResetExpireCacheCallable(String tableName)
+	protected CacheCountCallable(String tableName)
 	{
 		this.tableName = tableName;;
 	}
@@ -51,7 +51,7 @@ public class ResetExpireCacheCallable implements Callable<Integer>, Serializable
 				CCache<?, ?> cc = (CCache<?, ?>)stored;
 				if (cc.getTableName() != null && cc.getTableName().equals(tableName))
 				{
-						total += stored.size();
+						total += cc.sizeNoExpire();
 				}
 			}
 		}
