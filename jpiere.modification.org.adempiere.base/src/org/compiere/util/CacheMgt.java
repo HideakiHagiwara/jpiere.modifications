@@ -267,7 +267,7 @@ public class CacheMgt
 				if (stored != null && stored instanceof CCache)
 				{
 					CCache<?, ?> cc = (CCache<?, ?>)stored;
-					if (cc.getName().startsWith(tableName))		//	reset lines/dependent too
+					if (cc.getName().startsWith(tableName))		//JPIERE-0283
 					{
 						{
 							if (log.isLoggable(Level.FINE)) log.fine("(all) - " + stored);
@@ -295,7 +295,7 @@ public class CacheMgt
 			if (stored != null && stored instanceof CCache)
 			{
 				CCache<?, ?> cc = (CCache<?, ?>)stored;
-				if (cc.getTableName() != null && cc.getTableName().startsWith(tableName))		//	reset lines/dependent too
+				if (cc.getTableName() != null && cc.getTableName().equals(tableName))		//	JPIERE-0287
 				{
 					{
 						if (log.isLoggable(Level.FINE)) log.fine("(all) - " + stored);

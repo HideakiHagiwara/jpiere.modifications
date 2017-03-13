@@ -46,26 +46,40 @@ public class CacheCount extends SvrProcess
 		
 		int counter = 0;
 		int total = 0;
+		int tableCache = 0;
+		int otherCache = 0;
+		int temp = 0;
 		CacheInterface[] instances = cacheMgt.getInstancesAsArray();
 		for (CacheInterface stored : instances)
 		{
+			temp = 0;
 			if (stored != null && stored instanceof CCache)
 			{
 				CCache<?, ?> cc = (CCache<?, ?>)stored;
 				if (cc.getTableName() != null)
-					addLog("Table Name : " + cc.getTableName() + " - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
-				else if(cc.getName() != null)
-					addLog("Name : " + cc.getName() + " - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
-				else
-					addLog("Null Cache - #" + cc.sizeNoExpire() + " ／ ExpireMinutes - #" + cc.getExpireMinutes());
+				{
+					temp = cc.sizeNoExpire();
+					total =total + temp;
+					tableCache = tableCache +temp;
+					addLog("Count Cache #" + temp + " ->  Cache Table : " + cc.getTableName() + " - ExpireMinutes - #" + cc.getExpireMinutes());
+				}else if(cc.getName() != null){
+					temp = cc.sizeNoExpire();
+					total =total + temp;
+					otherCache = otherCache + temp;
+					addLog("Count Cache #" + temp + " ->  Cache Object : " + cc.getName() + " - ExpireMinutes - #" + cc.getExpireMinutes());
+				}else{
+					temp = cc.sizeNoExpire();
+					total =total + temp;
+					otherCache = otherCache + temp;
+					addLog("Count Cache #" + temp + " ->  Cache Object is null - ExpireMinutes - #" + cc.getExpireMinutes());
+				}
 				
-				total += cc.sizeNoExpire();
 				counter++;
 			}
 		}//for
 		
 		
-		return "Cache Count -> Cache Object - #" + counter + "  Total Cache - #" + total;
+		return "Cache Count -> Total Cache  #" + total + " = Table Cache #" + tableCache + " + Other cache #" + otherCache +" /  Cache Object  #" + counter;
 	}	//	doIt
 
 }	//	CacheReset
