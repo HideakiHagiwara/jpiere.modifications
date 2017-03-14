@@ -345,7 +345,7 @@ public class MMatchPO extends X_M_MatchPO
 			MInOutLine sLine, int C_OrderLine_ID, Timestamp dateTrx,
 			BigDecimal qty, String trxName) {
 		MMatchPO retValue = null;
-		String sql = "SELECT * FROM M_MatchPO WHERE C_OrderLine_ID=? ORDER BY M_MatchPO_ID";
+		String sql = "SELECT * FROM M_MatchPO WHERE C_OrderLine_ID=? and Reversal_ID IS NULL ORDER BY M_MatchPO_ID";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try
