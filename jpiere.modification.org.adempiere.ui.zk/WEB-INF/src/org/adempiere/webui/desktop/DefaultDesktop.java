@@ -192,7 +192,7 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 			pstmt = DB.prepareStatement(sql, null);
 			rs = pstmt.executeQuery();
 			while (rs.next())
-				fromWindowToFormMap.put(rs.getInt(1), rs.getInt(2));
+				formWindowToFormMap.put(rs.getInt(1), rs.getInt(2));
 		}
 		catch (Exception e)
 		{
@@ -1000,7 +1000,7 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 	}    
 
 	//JPIERE-0139:Zoom to Form Window
-	HashMap<Integer, Integer> fromWindowToFormMap = new HashMap<Integer, Integer>();
+	HashMap<Integer, Integer> formWindowToFormMap = new HashMap<Integer, Integer>();
 	HashMap<Integer, String> WindowTabTitleMap = new HashMap<Integer, String>();
 
 	/**
@@ -1010,9 +1010,9 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 	@Override
 	public void showZoomWindow(int AD_Window_ID, MQuery query) {
 
-		if(fromWindowToFormMap.size() > 0 && fromWindowToFormMap.containsKey(AD_Window_ID))
+		if(formWindowToFormMap.size() > 0 && formWindowToFormMap.containsKey(AD_Window_ID))
 		{
-			int Zoom_Window_ID = ((Integer)fromWindowToFormMap.get(AD_Window_ID)).intValue();
+			int Zoom_Window_ID = ((Integer)formWindowToFormMap.get(AD_Window_ID)).intValue();
 
 			//Zoom to Form Window
 			List<IFormWindowZoomFactory> factories = Service.locator().list(IFormWindowZoomFactory.class).getServices();
