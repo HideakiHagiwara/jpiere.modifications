@@ -326,7 +326,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     		m_total = 0;
     		return false;
     		
-    	}else if(MTable.get(m_findCtx, findFields[0].getGridTab().getAD_Table_ID()).isHighVolume() //High Volumne Table
+    	}else if(MTable.get(m_simpleCtx, findFields[0].getGridTab().getAD_Table_ID()).isHighVolume() //High Volumne Table
     			|| findFields[0].getGridTab().getGridWindow().getWindowType().equals("T")){ //Transaction Window
     		
     		m_total = 10;
