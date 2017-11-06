@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import org.adempiere.webui.AdempiereWebUI;
+import org.adempiere.webui.ClientInfo;
 import org.adempiere.webui.LayoutUtils;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Column;
@@ -440,13 +441,19 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     private void initAdvanced()
     {
         ToolBarButton btnNew = new ToolBarButton();
-        btnNew.setImage(ThemeManager.getThemeResource("images/New24.png"));
+         if (ThemeManager.isUseFontIconForImage())
+        	btnNew.setIconSclass("z-icon-New");
+        else
+        	btnNew.setImage(ThemeManager.getThemeResource("images/New24.png"));
         btnNew.setAttribute("name", "btnNewAdv");
         btnNew.addEventListener(Events.ON_CLICK, this);
 
         ToolBarButton btnDelete = new ToolBarButton();
         btnDelete.setAttribute("name","btnDeleteAdv");
-        btnDelete.setImage(ThemeManager.getThemeResource("images/Delete24.png"));
+        if (ThemeManager.isUseFontIconForImage())
+        	btnDelete.setIconSclass("z-icon-Delete");
+        else
+        	btnDelete.setImage(ThemeManager.getThemeResource("images/Delete24.png"));
         btnDelete.addEventListener(Events.ON_CLICK, this);
 
         Button btnOk = ButtonFactory.createNamedButton(ConfirmPanel.A_OK);
@@ -479,11 +486,12 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         ListHeader lstHAndOr = new ListHeader();
         lstHAndOr.setLabel(Msg.getMsg(Env.getCtx(), "And/Or"));
-        ZKUpdateUtil.setWidth(lstHAndOr, "10%");
+        ZKUpdateUtil.setWidth(lstHAndOr, "60px");
 
         ListHeader lstHLeftBracket = new ListHeader();
         lstHLeftBracket.setLabel("(");
-        ZKUpdateUtil.setWidth(lstHLeftBracket, "6%");
+        lstHLeftBracket.setAlign("center");
+        ZKUpdateUtil.setWidth(lstHLeftBracket, "50px");
 
         ListHeader lstHColumn = new ListHeader();
         lstHColumn.setLabel(Msg.translate(Env.getCtx(), "AD_Column_ID"));
@@ -491,6 +499,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         ListHeader lstHOperator = new ListHeader();
         lstHOperator.setLabel(Msg.getMsg(Env.getCtx(), "Operator"));
+        ZKUpdateUtil.setWidth(lstHOperator, "70px");
 
         ListHeader lstHQueryValue = new ListHeader();
         lstHQueryValue.setLabel(Msg.getMsg(Env.getCtx(), "QueryValue"));
@@ -502,7 +511,14 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         ListHeader lstHRightBracket = new ListHeader();
         lstHRightBracket.setLabel(")");
-        ZKUpdateUtil.setWidth(lstHRightBracket, "6%");
+        lstHRightBracket.setAlign("center");
+        ZKUpdateUtil.setWidth(lstHRightBracket, "50px");
+        
+        if (ClientInfo.maxWidth(ClientInfo.SMALL_WIDTH-1)) {        	
+        	ZKUpdateUtil.setWidth(lstHColumn, "200px");
+        	ZKUpdateUtil.setWidth(lstHQueryValue, "200px");
+        	ZKUpdateUtil.setWidth(lstHQueryTo, "200px");
+        }
 
         listhead.appendChild(lstHAndOr);
         listhead.appendChild(lstHLeftBracket);
@@ -565,10 +581,15 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     	
     	btnSave = new ToolBarButton();
         btnSave.setAttribute("name","btnSaveAdv");
-        btnSave.setImage(ThemeManager.getThemeResource("images/Save24.png"));
+        if (ThemeManager.isUseFontIconForImage())
+        	btnSave.setIconSclass("z-icon-Save");
+        else
+        	btnSave.setImage(ThemeManager.getThemeResource("images/Save24.png"));
         btnSave.addEventListener(Events.ON_CLICK, this);
         btnSave.setId("btnSave");
         btnSave.setStyle("vertical-align: middle;");
+        if (ThemeManager.isUseFontIconForImage())
+        	LayoutUtils.addSclass("large-toolbarbutton", btnSave);
 
         fQueryName = new Combobox();
         fQueryName.setTooltiptext(Msg.getMsg(Env.getCtx(),"QueryName"));
@@ -582,7 +603,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		fQueryName.addEventListener(Events.ON_SELECT, this);
 		
 		Label label = new Label(Msg.getMsg(Env.getCtx(), "SavedQuery"));
-		label.setStyle("vertical-align: middle;");
+		if (ClientInfo.maxWidth(639))
+			label.setStyle("vertical-align: middle;display: block; padding-left: 4px; padding-top: 4px;");
+		else
+			label.setStyle("vertical-align: middle;");
 		div.appendChild(label);
 		div.appendChild(fQueryName);
         div.appendChild(btnSave);
@@ -596,7 +620,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         // adding history combo
         prepareHistoryCombo();
         Label labelHistory = new Label(Msg.getMsg(Env.getCtx(), HISTORY_LABEL));
-        labelHistory.setStyle("vertical-align: middle;");
+        if (ClientInfo.maxWidth(639))
+        	labelHistory.setStyle("vertical-align: middle; display: block;padding-left: 4px; padding-top: 4px;");
+        else
+        	labelHistory.setStyle("vertical-align: middle;");
         div.appendChild(labelHistory);
         div.appendChild(historyCombo);
         historyCombo.setStyle("margin-left: 3px; margin-right: 3px; position: relative; vertical-align: middle;");
@@ -777,6 +804,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         }
         
         gridFieldList = null;
+        m_total = getNoOfRecords(null, false);
                 
         //JPIERE-0181:Start
         if(m_whereExtended != null && m_whereExtended.contains(m_tableName+"_ID = 0"))
