@@ -17,7 +17,7 @@
 
 package org.adempiere.webui.window;
 
-import static org.compiere.model.SystemIDs.REFERENCE_YESNO;
+import static org.compiere.model.SystemIDs.*;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -129,9 +129,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	private static final String FIND_ROW_EDITOR = "find.row.editor";
 
 	private static final String FIND_ROW_EDITOR_TO = "find.row.editor.to";
-	
+
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -4461202150492732658L;
 
@@ -209,7 +209,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	public static final int		INDEX_VALUE = 2;
 	/** Index Value2 = 3			*/
 	public static final int		INDEX_VALUE2 = 3;
-	
+
 	/** Index AndOr = 4		*/
 	public static final int		INDEX_ANDOR = 4;
 	/** Index LeftBracket = 5		*/
@@ -218,20 +218,20 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	public static final int		INDEX_RIGHTBRACKET = 6;
 	/** Index History		*/
 	public static final int		INDEX_HISTORY = 1;
-	
+
 	/** Search messages using translation */
-	private String				m_sNew;	
+	private String				m_sNew;
 
 
 	private static final String FIELD_SEPARATOR = "<^>";
 	private static final String SEGMENT_SEPARATOR = "<~>";
 	private static final String HISTORY_SEPARATOR = "<#>";
-	
+
 	private Combobox historyCombo = new Combobox();
 
 	private Properties m_simpleCtx;
 	private Properties m_advanceCtx;
-	
+
 	private static final String ON_POST_VISIBLE_ATTR = "onPostVisible.Event.Posted";
 
     /**
@@ -255,29 +255,29 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         m_tableName = tableName;
         m_whereExtended = whereExtended;
         m_findFields = findFields;
-        m_sNew = "** ".concat(Msg.getMsg(Env.getCtx(), "New Query")).concat(" **");		
+        m_sNew = "** ".concat(Msg.getMsg(Env.getCtx(), "New Query")).concat(" **");
         m_AD_Tab_ID = adTabId;
         m_minRecords = minRecords;
         m_isCancel = true;
         //
         m_simpleCtx = new Properties(Env.getCtx());
         m_advanceCtx = new Properties(Env.getCtx());
-        
+
         this.setBorder("normal");
         this.setShadow(false);
         ZKUpdateUtil.setWidth(this, "900px");
         ZKUpdateUtil.setHeight(this, "350px");
         this.setTitle(Msg.getMsg(Env.getCtx(), "Find").replaceAll("&", "") + ": " + title);
         this.setClosable(false);
-        this.setSizable(true);  
+        this.setSizable(true);
         this.setMaximizable(false);
-        
+
         this.setWidgetAttribute(AdempiereWebUI.WIDGET_INSTANCE_NAME, "findWindow");
         this.setId("findWindow_"+targetWindowNo);
         LayoutUtils.addSclass("find-window", this);
     }
-    
-    public boolean initialize() 
+
+    public boolean initialize()
     {
     	m_query = new MQuery (m_tableName);
         m_query.addRestriction(m_whereExtended);
@@ -287,21 +287,21 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         initPanel();
         initFind();
         initFindAdvanced();
-        
+
         if (m_total < m_minRecords)
         {
             return false;
         }
-                
+
         if (!winMain.getComponent().getTabpanel(0).isVisible())
         {
         	winMain.getComponent().setSelectedIndex(1);
         	onAdvanceTabSelected();
         }
-        
+
         return true;
     }
-    
+
     public boolean validate(int targetWindowNo, String title,
             int AD_Table_ID, String tableName, String whereExtended,
             GridField[] findFields, int minRecords, int adTabId)
@@ -313,28 +313,28 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     	if ((whereExtended == null && m_whereExtended != null) || (whereExtended != null && m_whereExtended == null) || !(whereExtended.equals(m_whereExtended))) return false;
     	if (adTabId != m_AD_Tab_ID) return false;
     	if ((findFields == null && m_findFields != null) || (findFields != null && m_findFields == null) || (findFields.length != m_findFields.length)) return false;
-    	if (findFields != null && findFields.length > 0) 
+    	if (findFields != null && findFields.length > 0)
     	{
     		for(int i = 0; i < findFields.length; i++)
     		{
     			if (findFields[i].getAD_Field_ID() != m_findFields[i].getAD_Field_ID()) return false;
     		}
     	}
-    	
+
     	//JPIERE-0181 : Start
     	if(whereExtended != null && whereExtended.contains(m_tableName+"_ID = 0"))//Window of New Record only
     	{
     		m_total = 0;
     		return false;
-    		
+
     	}else if(MTable.get(m_simpleCtx, findFields[0].getGridTab().getAD_Table_ID()).isHighVolume() //High Volumne Table
     			|| findFields[0].getGridTab().getGridWindow().getWindowType().equals("T")){ //Transaction Window
-    		
+
     		m_total = 10;
     		;//Nothing to do;
-    		
+
     	}else{
-    		
+
 	    	m_minRecords = minRecords;
 	    	m_total = getNoOfRecords(null, false);
 	    	if (m_total < m_minRecords)
@@ -343,13 +343,13 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	        }
     	}
     	//JPIERE-0181 : Finish
-    	
+
     	m_query = new MQuery (m_tableName);
         m_query.addRestriction(m_whereExtended);
-        
+
     	return true;
     }
-    
+
     /**
      * initialise lookup record tab
      *
@@ -390,22 +390,22 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         contentSimple.setStyle("width: 100%; position: relative");
         contentSimple.makeNoStrip();
         ZKUpdateUtil.setHflex(contentSimple, "1");
-        
+
         Columns columns = new Columns();
         Column column = new Column();
         column.setAlign("right");
         ZKUpdateUtil.setWidth(column, "30%");
         columns.appendChild(column);
-        
+
         column = new Column();
         column.setAlign("left");
         ZKUpdateUtil.setWidth(column, "50%");
         columns.appendChild(column);
-        
+
         column = new Column();
         ZKUpdateUtil.setWidth(column, "20%");
         columns.appendChild(column);
-        
+
         contentSimple.appendChild(columns);
 
         contentSimpleRows = new Rows();
@@ -441,7 +441,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     private void initAdvanced()
     {
         ToolBarButton btnNew = new ToolBarButton();
-         if (ThemeManager.isUseFontIconForImage())
+         if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
         	btnNew.setIconSclass("z-icon-New");
         else
         	btnNew.setImage(ThemeManager.getThemeResource("images/New24.png"));
@@ -450,7 +450,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         ToolBarButton btnDelete = new ToolBarButton();
         btnDelete.setAttribute("name","btnDeleteAdv");
-        if (ThemeManager.isUseFontIconForImage())
+        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
         	btnDelete.setIconSclass("z-icon-Delete");
         else
         	btnDelete.setImage(ThemeManager.getThemeResource("images/Delete24.png"));
@@ -513,8 +513,8 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         lstHRightBracket.setLabel(")");
         lstHRightBracket.setAlign("center");
         ZKUpdateUtil.setWidth(lstHRightBracket, "50px");
-        
-        if (ClientInfo.maxWidth(ClientInfo.SMALL_WIDTH-1)) {        	
+
+        if (ClientInfo.maxWidth(ClientInfo.SMALL_WIDTH-1)) {
         	ZKUpdateUtil.setWidth(lstHColumn, "200px");
         	ZKUpdateUtil.setWidth(lstHQueryValue, "200px");
         	ZKUpdateUtil.setWidth(lstHQueryTo, "200px");
@@ -530,18 +530,18 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         listhead.appendChild(lstHRightBracket);
         advancedPanel.appendChild(listhead);
         ZKUpdateUtil.setVflex(advancedPanel, true);
-        
-        
+
+
 
         Borderlayout layout = new Borderlayout();
         ZKUpdateUtil.setHflex(layout, "1");
         ZKUpdateUtil.setVflex(layout, "1");
         winAdvanced.appendChild(layout);
-        
+
         North north =new North();
-        layout.appendChild(north);        
+        layout.appendChild(north);
         north.appendChild(toolBar);
-       
+
         ZKUpdateUtil.setVflex(toolBar, "0");
 
         Center center = new Center();
@@ -569,26 +569,26 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     private void initPanel()
     {
     	setShadow(true);
-    	
+
     	Vlayout layout = new Vlayout();
     	layout.setStyle("height: 100%; width: 100%; position: relative;");
     	ZKUpdateUtil.setVflex(layout, "1");
     	this.appendChild(layout);
-    	
+
     	Div div = new Div();
     	ZKUpdateUtil.setVflex(div, "0");
     	layout.appendChild(div);
-    	
+
     	btnSave = new ToolBarButton();
         btnSave.setAttribute("name","btnSaveAdv");
-        if (ThemeManager.isUseFontIconForImage())
+        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
         	btnSave.setIconSclass("z-icon-Save");
         else
         	btnSave.setImage(ThemeManager.getThemeResource("images/Save24.png"));
         btnSave.addEventListener(Events.ON_CLICK, this);
         btnSave.setId("btnSave");
         btnSave.setStyle("vertical-align: middle;");
-        if (ThemeManager.isUseFontIconForImage())
+        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
         	LayoutUtils.addSclass("large-toolbarbutton", btnSave);
 
         fQueryName = new Combobox();
@@ -601,7 +601,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 			fQueryName.appendItem(userQueries[i].getName());
 		fQueryName.setValue("");
 		fQueryName.addEventListener(Events.ON_SELECT, this);
-		
+
 		Label label = new Label(Msg.getMsg(Env.getCtx(), "SavedQuery"));
 		if (ClientInfo.maxWidth(639))
 			label.setStyle("vertical-align: middle;display: block; padding-left: 4px; padding-top: 4px;");
@@ -610,9 +610,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		div.appendChild(label);
 		div.appendChild(fQueryName);
         div.appendChild(btnSave);
-        
+
         fQueryName.setStyle("margin-left: 3px; margin-right: 3px; position: relative; vertical-align: middle;");
-        
+
         msgLabel = new Label("");
         msgLabel.setStyle("margin-left: 10px; margin-right: 20px; vertical-align: middle;");
         div.appendChild(msgLabel);
@@ -649,8 +649,8 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         initAdvanced();
 
     } // initPanel
-    
-    
+
+
     /**
      * preparing combo of history
      */
@@ -674,7 +674,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     private void initFind()
     {
         log.config("");
-        
+
         ArrayList<GridField> gridFieldList = new ArrayList<GridField>();
         ArrayList<GridField> moreFieldList = new ArrayList<GridField>();
         //  Get Info from target Tab
@@ -682,7 +682,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         {
             GridField mField = m_findFields[i];
             boolean isDisplayed = mField.isDisplayed();
-            
+
 			if (mField.getVO().displayType == DisplayType.YesNo) {
 				// Make Yes-No searchable as list
 				GridFieldVO vo = mField.getVO();
@@ -737,27 +737,27 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 				mField = findField;
 			}
 			if (mField.isSelectionColumn()) {
-            	gridFieldList.add(mField); // isSelectionColumn 
+            	gridFieldList.add(mField); // isSelectionColumn
             } else {
             	if (isDisplayed && mField.getDisplayType() != DisplayType.Button && !mField.getColumnName().equals("AD_Client_ID"))
             		moreFieldList.add(mField);
             }
         }   //  for all target tab fields
 
-        //show well known column or the first 2 column in the form if no selection columns have been defined 
+        //show well known column or the first 2 column in the form if no selection columns have been defined
         if (gridFieldList.isEmpty() && !moreFieldList.isEmpty())
         {
         	for(GridField field:moreFieldList){
-        		if (field.getColumnName().equals("Value") || field.getColumnName().equals("Name") 
+        		if (field.getColumnName().equals("Value") || field.getColumnName().equals("Name")
         			|| field.getColumnName().equals("DocumentNo") || field.getColumnName().equals("Description"))
         		{
-        			gridFieldList.add(field);        			
+        			gridFieldList.add(field);
         		}
         	}
         	if (gridFieldList.isEmpty()) {
         		int i = 0;
         		for(GridField field:moreFieldList){
-        			if(field.getColumnName().equals("AD_Client_ID") || field.getColumnName().equals("AD_Org_ID") 
+        			if(field.getColumnName().equals("AD_Client_ID") || field.getColumnName().equals("AD_Org_ID")
         					|| field.getDisplayType() == DisplayType.ID)
         				continue;
         			gridFieldList.add(field);
@@ -769,7 +769,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         		moreFieldList.remove(field);
         	}
         }
-       
+
         // added comparator on sequence of selection column for IDEMPIERE-377
         Collections.sort(gridFieldList, new Comparator<GridField>() {
 			@Override
@@ -777,12 +777,12 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 				return o1.getSeqNoSelection()-o2.getSeqNoSelection();
 			}
 		});
-        
+
         // adding sorted columns
         for(GridField field:gridFieldList){
         	addSelectionColumn (field);
-		} 
-        
+		}
+
         //add ... link to show the rest of the columns
         if (!moreFieldList.isEmpty() && !gridFieldList.isEmpty()) {
         	Group rowg = new Group("...");
@@ -796,20 +796,20 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     		}
         	rowg.setOpen(false);
         }
-        
+
         if (m_sEditors.isEmpty()) {
         	Tabpanel tabPanel = winMain.getComponent().getTabpanel(0);
         	tabPanel.getLinkedTab().setVisible(false);
-        	tabPanel.setVisible(false);        	
+        	tabPanel.setVisible(false);
         }
-        
+
         gridFieldList = null;
         m_total = getNoOfRecords(null, false);
-                
+
         //JPIERE-0181:Start
         if(m_whereExtended != null && m_whereExtended.contains(m_tableName+"_ID = 0"))
         {
-        	m_total = 0;        	
+        	m_total = 0;
         }else{
         	m_total = 10;
         }
@@ -824,7 +824,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     {
         log.config("");
         createFields();
-		refreshUserQueries(); //Initializes and sets fQueryName		
+		refreshUserQueries(); //Initializes and sets fQueryName
     }   //  initFindAdvanced
 
     /**
@@ -837,7 +837,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         int row = rowList.size()-1;
     	createFields(null,row);
     }
-    
+
     /**
      * create respective fields in the advanced window tab
      *
@@ -856,7 +856,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         listColumn.setRows(0);
         listColumn.addEventListener(Events.ON_SELECT,this);
         ZKUpdateUtil.setHflex(listColumn, "true");
-        
+
         Listbox listOperator = new Listbox();
         listOperator.setId("listOperator"+listItem.getId());
         listOperator.setName("listOperator");
@@ -864,7 +864,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         listOperator.setRows(0);
         listOperator.addEventListener(Events.ON_SELECT,this);
         ZKUpdateUtil.setHflex(listOperator, "true");
-        
+
         Listbox listAndOr = new Listbox();
         listAndOr.setId("listAndOr"+listItem.getId());
         listAndOr.setName("listAndOr");
@@ -893,11 +893,11 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         // And Or
     	ValueNamePair[]	andOr = new ValueNamePair[] {
-    		new ValueNamePair ("",			""),	
+    		new ValueNamePair ("",			""),
     		new ValueNamePair ("AND",		Msg.getMsg(Env.getCtx(),"AND")),
-    		new ValueNamePair ("OR",		Msg.getMsg(Env.getCtx(),"OR"))	
+    		new ValueNamePair ("OR",		Msg.getMsg(Env.getCtx(),"OR"))
     	};
-        
+
     	for (ValueNamePair item: andOr)
             listAndOr.appendItem(item.getName(), item.getValue());
     	if (row<=0){ // don't show item on the first row.
@@ -910,28 +910,28 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         // Left Bracket
     	ValueNamePair[]	leftBracket = new ValueNamePair[] {
-    		new ValueNamePair ("",			""),	
+    		new ValueNamePair ("",			""),
     		new ValueNamePair ("(",			"("),
-    		new ValueNamePair ("((",		"(("),	
-    		new ValueNamePair ("(((",		"(((")	
+    		new ValueNamePair ("((",		"(("),
+    		new ValueNamePair ("(((",		"(((")
     	};
-        
+
     	for (ValueNamePair item: leftBracket)
             listLeftBracket.appendItem(item.getName(), item.getValue());
     	listLeftBracket.setSelectedIndex(0);
-        
+
         // Right Bracket
     	ValueNamePair[]	rightBracket = new ValueNamePair[] {
-    		new ValueNamePair ("",			""),	
+    		new ValueNamePair ("",			""),
     		new ValueNamePair (")",			")"),
-    		new ValueNamePair ("))",		"))"),	
-    		new ValueNamePair (")))",		")))")	
+    		new ValueNamePair ("))",		"))"),
+    		new ValueNamePair (")))",		")))")
     	};
-        
+
     	for (ValueNamePair item: rightBracket)
             listRightBracket.appendItem(item.getName(), item.getValue());
     	listRightBracket.setSelectedIndex(0);
-        
+
         ListCell cellColumn = new ListCell();
         cellColumn.appendChild(listColumn);
         cellColumn.setId("cellColumn"+listItem.getId());
@@ -987,7 +987,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	    		cellQueryTo.setAttribute("value", value2); // Elaine 2009/03/16 - set attribute value
 	    		cellQueryTo.appendChild(parseString(getTargetMField(columnName), value2, listItem, true));
 	    	}
-	    	
+
 	    	// AndOr
 	    	String sandOr = fields.length > INDEX_ANDOR ? fields[INDEX_ANDOR] : "";
 	    	if(sandOr.length() > 0)
@@ -1023,9 +1023,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	        		}
 	        	}
 	    	}
-	    	
+
         }
-        
+
    }    // createFields
 
     private void setValues(Listbox listColumn, Listbox listOperator, String[] fields)
@@ -1035,7 +1035,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         for (int c = 0; c < m_findFields.length; c++)
         {
             GridField field = m_findFields[c];
-            
+
             String columnName = field.getColumnName();
             String header = field.getHeader();
             if (header == null || header.length() == 0)
@@ -1108,7 +1108,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     {
     	addSelectionColumn(mField, null);
     }
-    
+
     /**
      *  Add Selection Column to first Tab
      *  @param mField field
@@ -1137,7 +1137,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         if (displayLength > 0)      //  set it back
             mField.setDisplayLength(displayLength);
         //
-        
+
         WEditor editorTo = null;
         Component fieldEditorTo = null;
         if (   DisplayType.isDate(mField.getDisplayType())
@@ -1167,7 +1167,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             m_sEditorsFlag.add(editorFlag);
             editorFlag.setMode("toggle");
             div.appendChild(editorFlag);
-        	div.appendChild(fieldEditorTo);       
+        	div.appendChild(fieldEditorTo);
         	fieldEditorTo.setVisible(false);
         	final Component editorRef = fieldEditorTo;
         	editorFlag.addEventListener(Events.ON_CHECK, new EventListener<Event>() {
@@ -1192,7 +1192,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         fieldEditor.addEventListener(Events.ON_OK,this);
     }   // addSelectionColumn
-    
+
     public void onEvent(Event event) throws Exception
     {
         m_createNew  = false;
@@ -1245,14 +1245,14 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                 componentTo.setId("searchFieldTo"+row.getId());
                 Listbox listOp = (Listbox) row.getFellow("listOperator"+row.getId());
                 String betweenValue = listOp.getSelectedItem().getValue().toString();
-                
+
                 if(betweenValue.equals(MQuery.NULL) || betweenValue.equals(MQuery.NOT_NULL))
                 {
                 	// to not display any editor
                 	row.getFellow("cellQueryFrom"+row.getId()).getChildren().clear();
                 	row.getFellow("cellQueryTo"+row.getId()).getChildren().clear();
                 }
-                else if (listbox.getId().equals(listColumn.getId()) || listbox.getId().equals(listOperator.getId())) 
+                else if (listbox.getId().equals(listColumn.getId()) || listbox.getId().equals(listOperator.getId()))
                 {
                 	addRowEditor(componentFrom, (ListCell)row.getFellow("cellQueryFrom"+row.getId()));
                 	addRowEditor(componentTo,(ListCell)row.getFellow("cellQueryTo"+row.getId()));
@@ -1262,21 +1262,21 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             {
             	int index = fQueryName.getSelectedIndex();
             	if(index < 0) return;
-            	if (winMain.getComponent().getSelectedIndex() != 1) 
+            	if (winMain.getComponent().getSelectedIndex() != 1)
             	{
             		winMain.getComponent().setSelectedIndex(1);
             		btnSave.setDisabled(m_AD_Tab_ID <= 0);
             		historyCombo.setSelectedItem(null);
-            		fQueryName.setReadonly(false); 
+            		fQueryName.setReadonly(false);
             	}
             	msgLabel.setText("");
 
-            	if(index == 0) 
+            	if(index == 0)
             	{ // no query - wipe and start over.
             		List<?> rowList = advancedPanel.getChildren();
             		for (int rowIndex = rowList.size() - 1; rowIndex >= 1; rowIndex--)
             			rowList.remove(rowIndex);
-            		createFields();  
+            		createFields();
             	}
     			else
     				parseUserQuery(userQueries[index-1]);
@@ -1304,7 +1304,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                 else if ("btnDeleteAdv".equals(button.getAttribute("name").toString()))
                 {
                     int index = advancedPanel.getSelectedIndex();
-                    if (advancedPanel.getSelectedItem() != null) 
+                    if (advancedPanel.getSelectedItem() != null)
                     {
                     	advancedPanel.getSelectedItem().detach();
                     	advancedPanel.setSelectedIndex(--index);
@@ -1412,9 +1412,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
 			createFields(fields, i);
 		}
-		
+
 		String[] historysegments = code.split(Pattern.quote(HISTORY_SEPARATOR));
-    	
+
 		String history = historysegments.length > INDEX_HISTORY? historysegments[INDEX_HISTORY] : "";
     	if(history.length() > 0)
     	{
@@ -1426,7 +1426,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
 		advancedPanel.invalidate();
 	}
-    
+
     private int getHistoryIndex(String value)
     {
     	int myIndex = 0;
@@ -1531,7 +1531,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		m_query = new MQuery(m_tableName);
 		m_query.addRestriction(Env.parseContext(Env.getCtx(), m_targetWindowNo, m_whereExtended, false));
 		StringBuilder code = new StringBuilder();
-		
+
 		int openBrackets = 0;
 
         List<?> rowList = advancedPanel.getChildren();
@@ -1568,7 +1568,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 			boolean and = true;
 			if ( rowIndex > 1 ) {
 				and = !"OR".equals(andOr);
-			}         
+			}
             //  Op
             Listbox op = (Listbox)row.getFellow("listOperator"+row.getId());
             if (op == null)
@@ -1578,7 +1578,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             //  Value   ******
             ListCell cellQueryFrom = (ListCell)row.getFellow("cellQueryFrom"+row.getId());
             Object value = null;
-            
+
             //Allowing Date validation before save
             Component compo = cellQueryFrom.getFirstChild();
             if(compo instanceof Datebox) {
@@ -1594,7 +1594,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             else {
             	value = cellQueryFrom.getAttribute("value");
             }
-            
+
             if (value == null)
             {
             	if(Operator.equals(MQuery.NULL) || Operator.equals(MQuery.NOT_NULL))
@@ -1618,7 +1618,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             if (MQuery.OPERATORS[MQuery.BETWEEN_INDEX].getValue().equals(Operator))
             {
                 ListCell cellQueryTo = (ListCell)row.getFellow("cellQueryTo"+row.getId());
-                
+
                 //Allowing Date validation before save
                 compo = cellQueryTo.getFirstChild();
                 if(compo instanceof Datebox) {
@@ -1634,8 +1634,8 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                 else {
                 	value2 = cellQueryFrom.getAttribute("value");
                 }
-                
-                
+
+
                 value2 = cellQueryTo.getAttribute("value");
                 if (value2 == null)
                     continue;
@@ -1658,7 +1658,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
             appendCode(code, ColumnName, Operator, value.toString(), value2 != null ? value2.toString() : "", andOr, lBrackets, rBrackets);
         }
-        
+
         saveQuery(saveQuery, code);
 
 	}	//	cmd_saveAdvanced
@@ -1684,7 +1684,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	}
 
 	private void saveQuery(boolean saveQuery, StringBuilder code) {
-        
+
         String selected = fQueryName.getValue();
 		if (selected != null) {
 			String name = selected;
@@ -1694,14 +1694,14 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 				return;
 			}
 			if (saveQuery){
-			
+
 				if(historyCombo.getSelectedItem()!=null)
 		        {
 					code.append(SEGMENT_SEPARATOR);
 					code.append(HISTORY_SEPARATOR);
 					code.append( (Object) historyCombo.getSelectedItem().getValue());
 		        }
-				
+
 				MUserQuery uq = MUserQuery.get(Env.getCtx(), m_AD_Tab_ID, name);
 				if (code.length() > 0) { // New or updated
 					if (uq == null) // Create a new record
@@ -1711,9 +1711,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 						uq.setAD_Tab_ID(m_AD_Tab_ID); //red1 UserQuery [ 1798539 ] taking in new field from Compiere
 						uq.setAD_User_ID(Env.getAD_User_ID(Env.getCtx())); //red1 - [ 1798539 ] missing in Compiere delayed source :-)
 					}
-					
+
 				} else	if (code.length() <= 0){ // Delete the query
-					if (uq == null) 
+					if (uq == null)
 					{
 						FDialog.warn (m_targetWindowNo, this, "NeedsQuery", name);
 						return;
@@ -1786,7 +1786,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                     if (field.isEncryptedColumn()) {
                     	value = SecureEngine.encrypt(value, Env.getAD_Client_ID(Env.getCtx()));
                     }
-                    
+
                     boolean isProductCategoryField = isProductCategoryField(field.getColumnName());
                     StringBuilder ColumnSQL = new StringBuilder(field.getColumnSQL(false));
                     //
@@ -1817,7 +1817,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                         m_query.addRestriction(ColumnSQL.toString(), oper, value, ColumnName, wed.getDisplay());
                         appendCode(code, ColumnName, oper, value.toString(), "", "AND", "", "");
                     }
-                    
+
                     /*
                     if (value.toString().indexOf('%') != -1)
                         m_query.addRestriction(ColumnName, MQuery.LIKE, value, ColumnName, ved.getDisplay());
@@ -1840,7 +1840,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                 appendCode(code, ColumnName, MQuery.LESS_EQUAL, valueTo.toString(), "", "AND", "", "");
             }
         }   //  editors
-        
+
         if(historyCombo.getSelectedItem()!=null)
         {
         	addHistoryRestriction(historyCombo.getSelectedItem());
@@ -1859,7 +1859,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		userQueries = MUserQuery.get(Env.getCtx(), m_AD_Tab_ID);
 		fQueryName.getItems().clear();
 		boolean selected = false;
-		fQueryName.appendItem(m_sNew);  
+		fQueryName.appendItem(m_sNew);
 		for (int i = 0; i < userQueries.length; i++)
 		{
 			Comboitem ci = fQueryName.appendItem(userQueries[i].getName());
@@ -1986,20 +1986,20 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         boolean enabled = !to || (to && between);
 
         //  Create Editor
-        GridField field = getTargetMField(columnName);        
+        GridField field = getTargetMField(columnName);
         if(field == null) return new Label("");
 
-        GridField findField = (GridField) field.clone(m_advanceCtx);        
+        GridField findField = (GridField) field.clone(m_advanceCtx);
         findField.setGridTab(null);
         WEditor editor = null;
-        if (findField.isKey() 
+        if (findField.isKey()
         		|| (!DisplayType.isLookup(findField.getDisplayType()) && DisplayType.isID(findField.getDisplayType())))
         {
             editor = new WNumberEditor(findField);
 		}
-        else if (findField.getDisplayType() == DisplayType.Button)        	
+        else if (findField.getDisplayType() == DisplayType.Button)
         {
-			if (findField.getAD_Reference_Value_ID() > 0) {		
+			if (findField.getAD_Reference_Value_ID() > 0) {
 				MLookupInfo info = MLookupFactory.getLookup_List(Env.getLanguage(Env.getCtx()), findField.getAD_Reference_Value_ID());
 				info.tabNo = TABNO;
 				MLookup mLookup = new MLookup(info, 0);
@@ -2017,19 +2017,19 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         else
         {
         	//reload lookupinfo for find window
-        	if (DisplayType.isLookup(findField.getDisplayType()) ) 
-        	{        		
+        	if (DisplayType.isLookup(findField.getDisplayType()) )
+        	{
         		findField.loadLookupNoValidate();
         		Lookup lookup = findField.getLookup();
         		if (lookup != null && lookup instanceof MLookup)
         		{
         			MLookup mLookup = (MLookup) lookup;
         			mLookup.getLookupInfo().tabNo = TABNO;
-        		}        		
+        		}
         		editor = WebEditorFactory.getEditor(findField, true);
         		findField.addPropertyChangeListener(editor);
-        	} 
-        	else 
+        	}
+        	else
         	{
         		editor = WebEditorFactory.getEditor(findField, true);
         		findField.addPropertyChangeListener(editor);
@@ -2040,7 +2040,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             editor = new WStringEditor(findField);
             findField.addPropertyChangeListener(editor);
         }
-        
+
         editor.addValueChangeListener(this);
         editor.setValue(null);
         editor.setReadWrite(enabled);
@@ -2085,19 +2085,19 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         m_isCancel = false; // teo_sarca [ 1708717 ]
         //  save pending
         cmd_saveSimple(false);
-        
+
         //  Test for no records
         if (getNoOfRecords(m_query, true) != 0)
           dispose();
 
     }   //  cmd_ok_Simple
-    
+
     /**
      * Get days from selected values of history combo
      * @param selectedItem
      * @return
      */
-    private int getHistoryDays(String selectedItem) 
+    private int getHistoryDays(String selectedItem)
 	{
     	int retDays = 0;
 		if (selectedItem.equals(HISTORY_DAY_DAY))
@@ -2109,9 +2109,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		else if (selectedItem.equals(HISTORY_DAY_YEAR))
 			retDays = 365;
 		return retDays;
-		
+
 	}
-    
+
 
     /**
      * Adding where clause from history data
@@ -2130,7 +2130,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     		m_query.addRestriction(where.toString());
     	}
     }
-    
+
 
 
     public void dispose()
@@ -2140,10 +2140,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         //  Find SQL
         DB.close(m_pstmt);
         m_pstmt = null;
-        
+
         //
         super.dispose();
-        
+
         isvalid = false;
     }   //  dispose
 
@@ -2155,17 +2155,17 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         m_isCancel = false; // teo_sarca [ 1708717 ]
         //  save pending
         cmd_saveAdvanced(false);
-        
+
         if(historyCombo.getSelectedItem()!=null)
         {
         	addHistoryRestriction(historyCombo.getSelectedItem());
         }
-        
+
         if (getNoOfRecords(m_query, true) != 0)
           dispose();
     }   //  cmd_ok_Advanced
 
-    
+
     /**
      *  Get the number of records of target tab
      *  @param query where clause for target tab
@@ -2475,11 +2475,11 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             	Env.setContext(ctx, m_targetWindowNo, editor.getColumnName(), evt.getNewValue().toString());
             	Env.setContext(ctx, m_targetWindowNo, TABNO, editor.getColumnName(), evt.getNewValue().toString());
             }
-            
+
             dynamicDisplay(editor, listcell);
         }
     }
-    
+
 	private void dynamicDisplay(WEditor editor, ListCell listcell) {
 		if (winMain.getComponent().getSelectedIndex() == 1)
 		{
@@ -2523,7 +2523,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		                	wed.dynamicDisplay();
 		        	}
 		        }
-		        
+
 		    }
 		}
 	}
@@ -2564,7 +2564,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 		}
 		return ret;
 	}
-	
+
 	private boolean isSearchLike(GridField field)
 	{
 		return DisplayType.isText(field.getDisplayType()) && !field.isVirtualColumn()
@@ -2574,6 +2574,6 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	public boolean isValid()
 	{
 		return isvalid;
-	}	
-	
+	}
+
 }   //  FindPanel
