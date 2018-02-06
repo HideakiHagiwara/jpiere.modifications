@@ -683,6 +683,11 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             GridField mField = m_findFields[i];
             boolean isDisplayed = mField.isDisplayed();
 
+            if (DisplayType.isText(mField.getVO().displayType)) {
+            	// for string fields allow searching long strings - useful for like and similar to searches
+            	mField.getVO().FieldLength = 32767;  // a conservative max literal string - like oracle extended
+            	mField.getVO().DisplayLength = mField.getVO().FieldLength;
+            }
 			if (mField.getVO().displayType == DisplayType.YesNo) {
 				// Make Yes-No searchable as list
 				GridFieldVO vo = mField.getVO();
@@ -1129,6 +1134,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         editor.setMandatory(false);
         editor.setReadWrite(true);
         editor.dynamicDisplay();
+        editor.updateStyle(false);
         editor.addValueChangeListener(this);
         Label label = editor.getLabel();
         Component fieldEditor = editor.getComponent();
@@ -1147,6 +1153,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             editorTo.setMandatory(false);
             editorTo.setReadWrite(true);
             editorTo.dynamicDisplay();
+            editorTo.updateStyle(false);
             editorTo.addValueChangeListener(this);
             //
             if (displayLength > 0)      //  set it back
@@ -1182,6 +1189,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             m_sEditorsFlag.add(null);
             m_sEditorsTo.add(null);
         	editor.fillHorizontal();
+        	editor.updateStyle(false);
         }
         panel.appendChild(new Space());
         if (group != null)
@@ -2046,6 +2054,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         editor.setReadWrite(enabled);
         editor.setVisible(enabled);
         editor.dynamicDisplay();
+        editor.updateStyle(false);
         if (editor instanceof WPaymentEditor) {
         	((WPaymentEditor)editor).getComponent().setEnabled(true, false);
         }
