@@ -1157,7 +1157,6 @@ public class MInOut extends X_M_InOut implements DocAction
 
 				//JPIERE-0370
 				if (!MBPartner.SOCREDITSTATUS_NoCreditCheck.equals(bp.getSOCreditStatus())
-						&& !MBPartner.SOCREDITSTATUS_CreditStop.equals(bp.getSOCreditStatus())
 						&& Env.ZERO.compareTo(bp.getSO_CreditLimit()) != 0)
 				{
 					BigDecimal notInvoicedAmt = MBPartner.getNotInvoicedAmt(getC_BPartner_ID());

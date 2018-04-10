@@ -18,8 +18,9 @@ package org.compiere.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -66,7 +67,25 @@ public class CacheMgt
 	/** Logger							*/
 	private static CLogger		log = CLogger.getCLogger(CacheMgt.class);
 
-	
+	public static int MAX_SIZE = 1000;
+	static
+	{
+		try
+		{
+			String maxSize = System.getProperty("Cache.MaxSize");
+			if (maxSize != null && maxSize.trim().length() > 0)
+			{
+				int max = 0;
+				try
+				{
+					max = Integer.parseInt(maxSize.trim());
+				} catch (Throwable t) {}
+				if (max > 0)
+					MAX_SIZE = max;
+			}
+		} catch (Throwable t) {}
+	}
+
 	/**************************************************************************
 	 * 	Create Cache Instance
 	 *	@param instance Cache
@@ -77,25 +96,25 @@ public class CacheMgt
 	{
 		if (instance == null)
 			return null;
-		
+
 		String name = instance.getName();
 		String tableName = instance.getTableName();
 		if (tableName != null)
 			m_tableNames.add(tableName);
-		
+
 		m_instances.add (instance);
 		Map<K, V> map = null;
-		if (distributed) 
+		if (distributed)
 		{
 			ICacheService provider = Service.locator().locate(ICacheService.class).getService();
 			if (provider != null)
 				map = provider.getMap(name);
 		}
-		
+
 		if (map == null)
 		{
-			map = new ConcurrentHashMap<K, V>();
-		}		
+			map = Collections.synchronizedMap(new MaxSizeHashMap<K, V>(instance.getMaxSize()));
+		}
 		return map;
 	}	//	register
 
@@ -123,33 +142,33 @@ public class CacheMgt
 	}	//	unregister
 
 	/**
-	 * do a cluster wide cache reset 
+	 * do a cluster wide cache reset
 	 * @return number of deleted cache entries
 	 */
 	private int  clusterReset() {
 		return clusterReset(null, -1);
 	}
-	
+
 	/**
 	 * do a cluster wide cache reset for tableName with recordId key
 	 * @param tableName
-	 * @param recordId record id for the cache entries to delete. pass -1 if you don't want to delete 
-	 * cache entries by record id   
+	 * @param recordId record id for the cache entries to delete. pass -1 if you don't want to delete
+	 * cache entries by record id
 	 * @return number of deleted cache entries
 	 */
 	private int clusterReset(String tableName, int recordId) {
 		IServiceHolder<IClusterService> holder = Service.locator().locate(IClusterService.class);
 		IClusterService service = holder.getService();
-		if (service != null) {			
+		if (service != null) {
 			ResetCacheCallable callable = new ResetCacheCallable(tableName, recordId);
 			Map<IClusterMember, Future<Integer>> futureMap = service.execute(callable, service.getMembers());
 			if (futureMap != null) {
 				int total = 0;
 				try {
 					Collection<Future<Integer>> results = futureMap.values();
-					for(Future<Integer> future : results) {						
-						Integer i = future.get();
-						total += i.intValue();
+					for(Future<Integer> i : results)
+					{
+						total += i.get();
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -164,18 +183,18 @@ public class CacheMgt
 			return resetLocalCache(tableName, recordId);
 		}
 	}
-	
+
 	/**
 	 * do a cluster wide cache reset for tableName with recordId key
 	 * @param tableName
-	 * @param recordId record id for the cache entries to delete. pass -1 if you don't want to delete 
-	 * cache entries by record id   
+	 * @param recordId record id for the cache entries to delete. pass -1 if you don't want to delete
+	 * cache entries by record id
 	 * @return number of deleted cache entries
 	 */
 	private void clusterNewRecord(String tableName, int recordId) {
 		IServiceHolder<IClusterService> holder = Service.locator().locate(IClusterService.class);
 		IClusterService service = holder.getService();
-		if (service != null) {			
+		if (service != null) {
 			CacheNewRecordCallable callable = new CacheNewRecordCallable(tableName, recordId);
 			if (service.execute(callable, service.getMembers()) == null) {
 				localNewRecord(tableName, recordId);
@@ -184,16 +203,16 @@ public class CacheMgt
 			localNewRecord(tableName, recordId);
 		}
 	}
-	
+
 	/**
-	 * do a cluster wide cache reset 
+	 * do a cluster wide cache reset
 	 * @return number of deleted cache entries
 	 */
-	public int reset() 
+	public int reset()
 	{
 		return clusterReset();
 	}
-	
+
 	/**
 	 * 	do a cluster wide cache reset for tableName
 	 * 	@param tableName table name
@@ -203,11 +222,11 @@ public class CacheMgt
 	{
 		return reset(tableName, -1);
 	}
-	
+
 	/**
 	 * do a cluster wide cache reset for tableName with recordId key
 	 * @param tableName
-	 * @param Record_ID record id for the cache entries to delete. pass -1 if you don't want to delete 
+	 * @param Record_ID record id for the cache entries to delete. pass -1 if you don't want to delete
 	 * cache entries by record id
 	 * @return number of deleted cache entries
 	 */
@@ -215,7 +234,7 @@ public class CacheMgt
 	{
 		return clusterReset(tableName, Record_ID);
 	}
-	
+
 	/**************************************************************************
 	 * 	Reset local Cache
 	 * 	@return number of deleted cache entries
@@ -244,7 +263,7 @@ public class CacheMgt
 	protected synchronized CacheInterface[] getInstancesAsArray() {
 		return m_instances.toArray(new CacheInterface[0]);
 	}
-	
+
 	/**
 	 * 	Reset local Cache
 	 * 	@param tableName table name
@@ -255,7 +274,7 @@ public class CacheMgt
 	{
 		if (tableName == null)
 			return resetLocalCache();
-		
+
 		//JPIERE-0283
 		if(tableName.equals("DB_PostgreSQL_Convert_Cache"))
 		{
@@ -280,10 +299,9 @@ public class CacheMgt
 			if (log.isLoggable(Level.FINE)) log.fine(tableName + ": #" + counter + " (" + total + ")");
 
 			return total;
-			
+
 		}//JPiere-0283
 
-		
 		if (!m_tableNames.contains(tableName))
 			return 0;
 		//
@@ -295,7 +313,7 @@ public class CacheMgt
 			if (stored != null && stored instanceof CCache)
 			{
 				CCache<?, ?> cc = (CCache<?, ?>)stored;
-				if (cc.getTableName() != null && cc.getTableName().equals(tableName))		//	JPIERE-0287
+				if (cc.getTableName() != null && cc.getTableName().startsWith(tableName))		//	reset lines/dependent too
 				{
 					{
 						if (log.isLoggable(Level.FINE)) log.fine("(all) - " + stored);
@@ -309,7 +327,7 @@ public class CacheMgt
 
 		return total;
 	}
-	
+
 	/**
 	 * 	Reset local Cache
 	 * 	@param tableName table name
@@ -320,7 +338,7 @@ public class CacheMgt
 	{
 		if (tableName == null)
 			return;
-		
+
 		if (!m_tableNames.contains(tableName))
 			return;
 		//
@@ -339,13 +357,13 @@ public class CacheMgt
 			}
 		}
 	}
-	
+
 	/**
 	 * 	Total Cached Elements
 	 *	@return count
 	 */
 	public int getElementCount()
-	{		
+	{
 		int total = 0;
 		CacheInterface[] instances = getInstancesAsArray();
 		for (CacheInterface stored : instances)
@@ -361,8 +379,8 @@ public class CacheMgt
 		}
 		return total;
 	}	//	getElementCount
-	
-	
+
+
 	/**
 	 * 	String Representation
 	 *	@return info
@@ -375,7 +393,7 @@ public class CacheMgt
 			.append("]");
 		return sb.toString ();
 	}	//	toString
-	
+
 	/**
 	 * 	Extended String Representation
 	 *	@return info
@@ -389,9 +407,26 @@ public class CacheMgt
 			.append(getElementCount())
 			.append("]");
 		return sb.toString ();
-	}	//	toString	
+	}	//	toString
 
 	public void newRecord(String tableName, int recordId) {
 		clusterNewRecord(tableName, recordId);
+	}
+
+	private static class MaxSizeHashMap<K, V> extends LinkedHashMap<K, V> {
+	    /**
+		 * generated serial id
+		 */
+		private static final long serialVersionUID = 5532596165440544235L;
+		private final int maxSize;
+
+	    public MaxSizeHashMap(int maxSize) {
+	        this.maxSize = maxSize;
+	    }
+
+	    @Override
+	    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+	        return maxSize <= 0 ? false : size() > maxSize;
+	    }
 	}
 }	//	CCache
