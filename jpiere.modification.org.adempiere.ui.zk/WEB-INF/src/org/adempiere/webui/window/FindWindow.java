@@ -17,7 +17,7 @@
 
 package org.adempiere.webui.window;
 
-import static org.compiere.model.SystemIDs.*;
+import static org.compiere.model.SystemIDs.REFERENCE_YESNO;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -317,7 +317,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     	{
     		for(int i = 0; i < findFields.length; i++)
     		{
-    			if (findFields[i].getAD_Field_ID() != m_findFields[i].getAD_Field_ID()) return false;
+    			if (m_findFields[i] != null && findFields[i].getAD_Field_ID() != m_findFields[i].getAD_Field_ID()) return false;
     		}
     	}
 
@@ -441,19 +441,13 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     private void initAdvanced()
     {
         ToolBarButton btnNew = new ToolBarButton();
-         if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
-        	btnNew.setIconSclass("z-icon-New");
-        else
-        	btnNew.setImage(ThemeManager.getThemeResource("images/New24.png"));
+        btnNew.setImage(ThemeManager.getThemeResource("images/New24.png"));
         btnNew.setAttribute("name", "btnNewAdv");
         btnNew.addEventListener(Events.ON_CLICK, this);
 
         ToolBarButton btnDelete = new ToolBarButton();
         btnDelete.setAttribute("name","btnDeleteAdv");
-        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
-        	btnDelete.setIconSclass("z-icon-Delete");
-        else
-        	btnDelete.setImage(ThemeManager.getThemeResource("images/Delete24.png"));
+        btnDelete.setImage(ThemeManager.getThemeResource("images/Delete24.png"));
         btnDelete.addEventListener(Events.ON_CLICK, this);
 
         Button btnOk = ButtonFactory.createNamedButton(ConfirmPanel.A_OK);
@@ -581,15 +575,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
     	btnSave = new ToolBarButton();
         btnSave.setAttribute("name","btnSaveAdv");
-        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
-        	btnSave.setIconSclass("z-icon-Save");
-        else
-        	btnSave.setImage(ThemeManager.getThemeResource("images/Save24.png"));
+        btnSave.setImage(ThemeManager.getThemeResource("images/Save24.png"));
         btnSave.addEventListener(Events.ON_CLICK, this);
         btnSave.setId("btnSave");
         btnSave.setStyle("vertical-align: middle;");
-        if ("Y".equals(Env.getContext(Env.getCtx(), "#THEME_USE_FONT_ICON_FOR_IMAGE")))
-        	LayoutUtils.addSclass("large-toolbarbutton", btnSave);
 
         fQueryName = new Combobox();
         fQueryName.setTooltiptext(Msg.getMsg(Env.getCtx(),"QueryName"));
@@ -783,11 +772,13 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 			}
 		});
 
+        List<GridField> excludes = new ArrayList<GridField>();
         // adding sorted columns
         for(GridField field:gridFieldList){
-        	addSelectionColumn (field);
-		}
-
+        	if (!addSelectionColumn (field))
+        		excludes.add(field);
+		} 
+        
         //add ... link to show the rest of the columns
         if (!moreFieldList.isEmpty() && !gridFieldList.isEmpty()) {
         	Group rowg = new Group("...");
@@ -797,11 +788,23 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 			cell.setColspan(3);
 			cell.setAlign("left");
         	for(GridField field:moreFieldList){
-            	addSelectionColumn (field, rowg);
+            	if (!addSelectionColumn (field, rowg))
+            		excludes.add(field);
     		}
         	rowg.setOpen(false);
         }
-
+        
+        if (!excludes.isEmpty()) {
+        	for(GridField field : excludes) {
+        		for(int i = 0; i < m_findFields.length; i++) {
+        			if (m_findFields[i] == field) {
+        				m_findFields[i] = null;
+        				break;
+        			}
+        		}
+        	}
+        }
+        
         if (m_sEditors.isEmpty()) {
         	Tabpanel tabPanel = winMain.getComponent().getTabpanel(0);
         	tabPanel.getLinkedTab().setVisible(false);
@@ -1040,6 +1043,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         for (int c = 0; c < m_findFields.length; c++)
         {
             GridField field = m_findFields[c];
+            if (field == null) continue;
 
             String columnName = field.getColumnName();
             String header = field.getHeader();
@@ -1109,16 +1113,16 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
      *  Add Selection Column to first Tab
      *  @param mField field
     **/
-    public void addSelectionColumn(GridField mField)
+    public boolean addSelectionColumn(GridField mField)
     {
-    	addSelectionColumn(mField, null);
+    	return addSelectionColumn(mField, null);
     }
-
+    
     /**
      *  Add Selection Column to first Tab
      *  @param mField field
     **/
-    public void addSelectionColumn(GridField mField, Group group)
+    public boolean addSelectionColumn(GridField mField, Group group)
     {
         if (log.isLoggable(Level.CONFIG)) log.config(mField.getHeader());
         int displayLength = mField.getDisplayLength();
@@ -1131,6 +1135,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         WEditor editor = null;
         //false will use hflex which is render 1 pixel too width on firefox
         editor = WebEditorFactory.getEditor(mField, true);
+        if (!editor.isSearchable()) {
+        	return false;
+        }
         editor.setMandatory(false);
         editor.setReadWrite(true);
         editor.dynamicDisplay();
@@ -1199,6 +1206,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         m_sEditors.add(editor);
 
         fieldEditor.addEventListener(Events.ON_OK,this);
+        return true;
     }   // addSelectionColumn
 
     public void onEvent(Event event) throws Exception
@@ -2079,7 +2087,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         for (int c = 0; c < m_findFields.length; c++)
         {
             GridField field = m_findFields[c];
-            if (columnName.equals(field.getColumnName()))
+            if (field != null && columnName.equals(field.getColumnName()))
                 return field;
         }
         return null;
