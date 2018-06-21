@@ -1219,21 +1219,10 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
         {
 			Map <Integer, List<Object>> selectedRow = getSelectedRowInfo();
 
-			ArrayList<Integer> notSelectedRow_KeyData = new ArrayList<Integer>(); //JPIERE-0366 for ConcurrentModificationException
-
             for (Entry<Integer, List<Object>> selectedInfo : selectedRow.entrySet())
             {
             	// get key data column
                 Integer keyData = selectedInfo.getKey();
-
-                /** JPIERE-0366 Start*/
-                List<Object> list_object = selectedInfo.getValue();
-                if(!contentPanel.getModel().isSelected(list_object))
-                {
-                	notSelectedRow_KeyData.add(keyData);
-                	continue;
-                }
-                /** JPIERE-0366 Finish*/
 
                 if (infoCulumnId > 0){
                 	// have viewID, get it
@@ -1249,13 +1238,6 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
                 }
 
             }
-
-            /** JPIERE-0366  for ConcurrentModificationException */
-            for(Integer keyData : notSelectedRow_KeyData)
-            {
-            	selectedRow.remove(keyData.intValue());
-            }
-            /** JPIERE-0366 Finish*/
 
             return m_viewIDMap;
         }else{
@@ -1983,6 +1965,9 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 					}else if (!m_pi.isError()){
 						ProcessInfoDialog.showProcessInfo(m_pi, p_WindowNo, InfoPanel.this, true);
 						isRequeryByRunSuccessProcess = true;
+
+						recordSelectedData.clear();//JPIERE-0366 Clear all Selection .
+
 						Clients.response(new AuEcho(InfoPanel.this, "onQueryCallback", null));
 					}
 
