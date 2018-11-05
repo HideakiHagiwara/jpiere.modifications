@@ -226,7 +226,7 @@ public class MMatchInv extends X_M_MatchInv
 		if (!success)
 			return false;
 
-		//JPIERE-0224
+		//JPIERE-0224 Create Nagative Qty Match PO
 //		if (getM_InOutLine_ID() > 0)
 //		{
 //			MInOutLine line = new MInOutLine(getCtx(), getM_InOutLine_ID(), get_TrxName());
