@@ -17,7 +17,7 @@
 
 package org.adempiere.webui.window;
 
-import static org.compiere.model.SystemIDs.REFERENCE_YESNO;
+import static org.compiere.model.SystemIDs.*;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -71,6 +71,7 @@ import org.adempiere.webui.event.DialogEvents;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.factory.ButtonFactory;
+import org.adempiere.webui.panel.StatusBarPanel;
 import org.adempiere.webui.part.MultiTabPart;
 import org.adempiere.webui.theme.ThemeManager;
 import org.adempiere.webui.util.ZKUpdateUtil;
@@ -93,7 +94,6 @@ import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.compiere.util.SecureEngine;
 import org.compiere.util.Util;
 import org.compiere.util.ValueNamePair;
 import org.zkoss.zk.au.out.AuFocus;
@@ -112,6 +112,7 @@ import org.zkoss.zul.Datebox;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Hbox;
 import org.zkoss.zul.North;
+import org.zkoss.zul.Separator;
 import org.zkoss.zul.South;
 import org.zkoss.zul.Space;
 import org.zkoss.zul.Tab;
@@ -232,7 +233,13 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	private Properties m_simpleCtx;
 	private Properties m_advanceCtx;
 
+	private int rowCount;
+
 	private static final String ON_POST_VISIBLE_ATTR = "onPostVisible.Event.Posted";
+
+	/** START DEVCOFFEE **/
+	private StatusBarPanel statusBar = new StatusBarPanel();
+	/** END DEVCOFFEE **/
 
     /**
      * FindPanel Constructor
@@ -360,6 +367,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         btnNew.setId("btnNew");
         btnNew.addEventListener(Events.ON_CLICK,this);
 
+        Button btnClear = ButtonFactory.createNamedButton(ConfirmPanel.A_RESET);
+        btnClear.setId("btnReset");
+        btnClear.addEventListener(Events.ON_CLICK,this);
+
         Button btnOk = ButtonFactory.createNamedButton(ConfirmPanel.A_OK);
         btnOk.setName("btnOkSimple");
         btnOk.setId("btnOk");
@@ -378,6 +389,10 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 
         Panel pnlButtonLeft = new Panel();
         pnlButtonLeft.appendChild(btnNew);
+        Separator sep = new Separator("vertical");
+        sep.setWidth("2px");
+        pnlButtonLeft.appendChild(sep);
+        pnlButtonLeft.appendChild(btnClear);
         ZKUpdateUtil.setHflex(pnlButtonLeft, "1");
 
         Hbox hboxButton = new Hbox();
@@ -636,6 +651,9 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         winMain.addTab(tabPanel, Msg.getMsg(Env.getCtx(), "Advanced").replaceAll("&", ""), false, false);
         initSimple();
         initAdvanced();
+        /** START DEVCOFFEE **/
+//        layout.appendChild(statusBar); //JPIERE-0181:Comment Out - IDEMPIERE-1643 Adding a status bar for FindWindow
+        /** START DEVCOFFEE **/
 
     } // initPanel
 
@@ -677,7 +695,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
             	mField.getVO().FieldLength = 32767;  // a conservative max literal string - like oracle extended
             	mField.getVO().DisplayLength = mField.getVO().FieldLength;
             }
-			if (mField.getVO().displayType == DisplayType.YesNo) {
+			if (mField.getVO().displayType == DisplayType.YesNo || mField.isEncrypted() || mField.isEncryptedColumn()) {
 				// Make Yes-No searchable as list
 				GridFieldVO vo = mField.getVO();
 				GridFieldVO ynvo = vo.clone(m_simpleCtx, vo.WindowNo, vo.TabNo, vo.AD_Window_ID, vo.AD_Tab_ID, vo.tabReadOnly);
@@ -777,8 +795,8 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         for(GridField field:gridFieldList){
         	if (!addSelectionColumn (field))
         		excludes.add(field);
-		} 
-        
+		}
+
         //add ... link to show the rest of the columns
         if (!moreFieldList.isEmpty() && !gridFieldList.isEmpty()) {
         	Group rowg = new Group("...");
@@ -793,7 +811,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     		}
         	rowg.setOpen(false);
         }
-        
+
         if (!excludes.isEmpty()) {
         	for(GridField field : excludes) {
         		for(int i = 0; i < m_findFields.length; i++) {
@@ -804,7 +822,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         		}
         	}
         }
-        
+
         if (m_sEditors.isEmpty()) {
         	Tabpanel tabPanel = winMain.getComponent().getTabpanel(0);
         	tabPanel.getLinkedTab().setVisible(false);
@@ -823,6 +841,11 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         }
         //JPIERE-0181:Finish
 
+        /** START DEVCOFFEE **/
+    	//	Get Total
+		setStatusDB (m_total);
+		statusBar.setStatusLine("");
+		/** END DEVCOFFEE **/
     }   //  initFind
 
     /**
@@ -855,7 +878,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     	if (null!=fields && fields.length>=1 && fields[0].contains(HISTORY_SEPARATOR))
     			return;
         ListItem listItem = new ListItem();
-        listItem.setId("Row"+advancedPanel.getItemCount());
+       listItem.setId("Row"+ rowCount++);
 
         Listbox listColumn = new Listbox();
         listColumn.setId("listColumn"+listItem.getId());
@@ -1117,7 +1140,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     {
     	return addSelectionColumn(mField, null);
     }
-    
+
     /**
      *  Add Selection Column to first Tab
      *  @param mField field
@@ -1145,7 +1168,8 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         editor.addValueChangeListener(this);
         Label label = editor.getLabel();
         Component fieldEditor = editor.getComponent();
-
+        //Fix miss lable of checkbox
+        label.setValue(mField.getHeader());
         //
         if (displayLength > 0)      //  set it back
             mField.setDisplayLength(displayLength);
@@ -1367,6 +1391,21 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                     m_createNew  = true;
                     m_isCancel = false;
                     dispose();
+                }
+                else if ("btnReset".equals(btn.getName())){
+                	for (WEditor clearField : m_sEditors){
+                		clearField.setValue(null);
+                	}
+
+                	for (WEditor clearField : m_sEditorsTo){
+                		if (clearField != null){
+                			clearField.setValue(null);
+                			clearField.setVisible(false);
+
+                			ToolBarButton moreButtor = m_sEditorsFlag.get(m_sEditorsTo.indexOf(clearField));
+                			moreButtor.setChecked(false);
+                		}
+                	}
                 }
             }
         }
@@ -1725,7 +1764,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 						uq = new MUserQuery (Env.getCtx(), 0, null);
 						uq.setName (name);
 						uq.setAD_Tab_ID(m_AD_Tab_ID); //red1 UserQuery [ 1798539 ] taking in new field from Compiere
-						uq.setAD_User_ID(Env.getAD_User_ID(Env.getCtx())); //red1 - [ 1798539 ] missing in Compiere delayed source :-)
+						uq.set_ValueOfColumn("AD_User_ID", Env.getAD_User_ID(Env.getCtx())); // required set_Value for System=0 user
 					}
 
 				} else	if (code.length() <= 0){ // Delete the query
@@ -1798,13 +1837,22 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
                     // globalqss - Carlos Ruiz - 20060711
                     // fix a bug with virtualColumn + isSelectionColumn not yielding results
                     GridField field = getTargetMField(ColumnName);
-                    // add encryption here if the field is encrypted.
-                    if (field.isEncryptedColumn()) {
-                    	value = SecureEngine.encrypt(value, Env.getAD_Client_ID(Env.getCtx()));
-                    }
 
                     boolean isProductCategoryField = isProductCategoryField(field.getColumnName());
                     StringBuilder ColumnSQL = new StringBuilder(field.getColumnSQL(false));
+
+                    // add encryption here if the field is encrypted.
+                    if (field.isEncrypted()) {
+                    	String Operator = MQuery.NULL;
+                    	if ("Y".equals(value)){
+                    		Operator = MQuery.NOT_NULL;
+                    	}
+                    	m_query.addRestriction(ColumnSQL.toString(), Operator, null,
+                    			ColumnName, wed.getDisplay());
+                    	appendCode(code, ColumnName, Operator, "", "", "AND", "", "");
+                    	continue;
+                    }
+
                     //
                     // Be more permissive for String columns
                     if (isSearchLike(field))
@@ -1945,12 +1993,19 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
     {
     	String columnName = column.getValue().toString();
     	int referenceType = -1;
+    	boolean isEncrypted = false;
     	if (columnName != null) {
     		MTable table = MTable.get(Env.getCtx(), m_tableName);
     		MColumn col = table.getColumn(columnName);
     		referenceType = col.getAD_Reference_ID();
+   			GridField field = getTargetMField(columnName);
+    		isEncrypted = (col.isEncrypted() || field.isEncrypted());
     	}
-        if (DisplayType.isLookup(referenceType)
+    	if (isEncrypted)
+    	{
+        	addOperators(MQuery.OPERATORS_ENCRYPTED, listOperator);
+    	}
+    	else if (DisplayType.isLookup(referenceType)
         		|| DisplayType.YesNo == referenceType
         		|| DisplayType.Button == referenceType)
         {
@@ -2592,5 +2647,17 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	{
 		return isvalid;
 	}
+
+	/** START DEVCOFFEE **/
+	/**
+	 *	Display current count
+	 *  @param currentCount String representation of current/total
+	 */
+	private void setStatusDB (int currentCount)
+	{
+		StringBuilder text = new StringBuilder(" ").append(Msg.getMsg(Env.getCtx(), "Records")).append(" = ").append(m_total).append(" ");
+		statusBar.setStatusDB(text.toString());
+	}	//	setDtatusDB
+	/** END DEVCOFFEE **/
 
 }   //  FindPanel
