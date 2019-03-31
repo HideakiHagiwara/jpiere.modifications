@@ -1693,12 +1693,14 @@ public abstract class AbstractADWindowContent extends AbstractUIPart implements 
             //JPIERE-0436 JPiere Attachemnt File
             if(!toolbar.getButton("JPiereAttachment").isInvalidated())
             {
+            	toolbar.getButton("JPiereAttachment").setDisabled(false);
     			toolbar.getButton("JPiereAttachment").setPressed(hasAttachment(adTabbox.getSelectedGridTab()));
             }
         }
         else
         {
             toolbar.enableAttachment(false);
+            toolbar.getButton("JPiereAttachment").setDisabled(true); //JPIERE-0436 JPiere Attachemnt File
         }
 
         // Check Chat and PostIt
