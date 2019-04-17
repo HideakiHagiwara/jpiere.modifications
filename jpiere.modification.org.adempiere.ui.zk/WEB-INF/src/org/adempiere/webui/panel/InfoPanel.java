@@ -17,6 +17,7 @@
 
 package org.adempiere.webui.panel;
 
+import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,8 +27,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -78,6 +81,7 @@ import org.compiere.model.X_AD_CtxHelp;
 import org.compiere.process.ProcessInfo;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
+import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
@@ -89,7 +93,6 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.KeyEvent;
-import org.zkoss.zk.ui.event.MouseEvent;
 import org.zkoss.zk.ui.event.SelectEvent;
 import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Comboitem;
@@ -129,6 +132,7 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	// attribute key of info process
 	protected final static String ATT_INFO_PROCESS_KEY = "INFO_PROCESS";
 	protected int pageSize;
+	public LinkedHashMap<KeyNamePair,LinkedHashMap<String, Object>> m_values = null;
 	protected MInfoRelated[] relatedInfoList;
 	// for test disable load all record when num of record < 1000
 	protected boolean isIgnoreCacheAll = true;
@@ -367,7 +371,10 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	protected String              m_sqlCount;
 	/** Order By Clause         */
 	protected String              m_sqlOrder;
-	protected String              m_sqlUserOrder;
+	private String              m_sqlUserOrder;
+	/* sql column of infocolumn (can be alias) */
+	protected int              	  indexOrderColumn = -1;
+	protected Boolean             isColumnSortAscending = null;
 	/**ValueChange listeners       */
     private ArrayList<ValueChangeListener> listeners = new ArrayList<ValueChangeListener>();
 	/** Loading success indicator       */
@@ -391,7 +398,7 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	private boolean m_useDatabasePaging = false;
 	private BusyDialog progressWindow;
 	// in case double click to item. this store clicked item (maybe it's un-select item)
-	private Listitem m_lastOnSelectItem;
+	private int m_lastSelectedIndex = -1;
 	protected GridField m_gridfield;
 
 	/**
@@ -588,15 +595,15 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 
 			}
 			else if (c == Boolean.class)
-		        value = new Boolean("Y".equals(rs.getString(colIndex)));
+		        value = Boolean.valueOf("Y".equals(rs.getString(colIndex)));
 			else if (c == Timestamp.class)
 		        value = rs.getTimestamp(colIndex);
 			else if (c == BigDecimal.class)
 		        value = rs.getBigDecimal(colIndex);
 			else if (c == Double.class)
-		        value = new Double(rs.getDouble(colIndex));
+		        value = Double.valueOf(rs.getDouble(colIndex));
 			else if (c == Integer.class)
-		        value = new Integer(rs.getInt(colIndex));
+		        value = Integer.valueOf(rs.getInt(colIndex));
 			else if (c == KeyNamePair.class)
 			{
 				if (p_layout[col].isKeyPairCol())
@@ -715,10 +722,17 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 				continue;
 
 			MInfoColumn infoColumnAppend = (MInfoColumn) modelHasInfoColumn.getAD_InfoColumn();
-			//TODO: improve read data to get data by data type of column.
-			String appendData = null;
+			Object appendData = null;
 			try {
+				if (DisplayType.isID(infoColumnAppend.getAD_Reference_ID())) {
+					appendData = rs.getInt(infoColumnAppend.getColumnName());
+				} else if (DisplayType.isDate(infoColumnAppend.getAD_Reference_ID())) {
+					appendData = rs.getTimestamp(infoColumnAppend.getColumnName());
+				} else if (DisplayType.isNumeric(infoColumnAppend.getAD_Reference_ID())) {
+					appendData = rs.getBigDecimal(infoColumnAppend.getColumnName());
+				} else {
 				appendData = rs.getString(infoColumnAppend.getColumnName());
+				}
 			} catch (SQLException e) {
 				appendData = null;
 			}
@@ -1027,8 +1041,8 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
         	int index = sql.lastIndexOf(" WHERE");
         	sql.delete(index, sql.length());
         }
-        if (m_sqlUserOrder != null && m_sqlUserOrder.trim().length() > 0)
-        	sql.append(m_sqlUserOrder);
+        if (indexOrderColumn > -1)
+        	sql.append(getUserOrderClause());
         else
         	sql.append(m_sqlOrder);
         dataSql = Msg.parseTranslation(Env.getCtx(), sql.toString());    //  Variables
@@ -1039,6 +1053,60 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
         	dataSql = DB.getDatabase().addPagingSQL(dataSql, getCacheStart(), cacheEnd);
         }
 		return dataSql;
+	}
+
+	/**
+	 * build order clause of current sort order, and save it to m_sqlUserOrder
+	 * @return
+	 */
+	protected String getUserOrderClause() {
+		if (indexOrderColumn < 0) {
+			return null;
+		}
+		if (m_sqlUserOrder == null) {
+			m_sqlUserOrder = getUserOrderClause (indexOrderColumn);
+		}
+		return m_sqlUserOrder;
+	}
+	
+	/**
+	 * build order clause of give column
+	 * if call that function before init list will raise a NPE. care about your code
+	 * @param col
+	 * @return
+	 */
+	protected String getUserOrderClause(int col) {
+		String colsql = p_layout[col].getColSQL().trim();
+		int lastSpaceIdx = colsql.lastIndexOf(" ");
+		if (lastSpaceIdx > 0)
+		{
+			String tmp = colsql.substring(0, lastSpaceIdx).trim();
+			char last = tmp.charAt(tmp.length() - 1);
+
+			String alias = colsql.substring(lastSpaceIdx).trim();
+			boolean hasAlias = alias.matches("^[a-zA-Z_][a-zA-Z0-9_]*$"); // valid SQL alias - starts with letter then digits, letters, underscore
+
+			if (tmp.toLowerCase().endsWith("as") && hasAlias)
+			{
+				colsql = alias;
+			}
+			else if (!(last == '*' || last == '-' || last == '+' || last == '/' || last == '>' || last == '<' || last == '='))
+			{
+				if (alias.startsWith("\"") && alias.endsWith("\""))
+				{
+					colsql = alias;
+				}
+				else
+				{
+					if (hasAlias)
+					{
+						colsql = alias;
+					}
+				}
+			}
+		}
+		
+		return String.format(" ORDER BY %s %s ", colsql, isColumnSortAscending? "" : "DESC");
 	}
 
     private void addDoubleClickListener() {
@@ -1348,13 +1416,27 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 			if (recordSelectedData.containsKey(keyViewValue)){
 				// TODO: maybe add logic to check value of current record (focus only to viewKeys value) is same as value save in lsSelectedKeyValue
 				// because record can change by other user
-				lsSelectionRecord.add(contentPanel.getModel().get(rowIndex));
+				Object row = contentPanel.getModel().get(rowIndex);
+								
+				if(onRestoreSelectedItemIndexInPage(keyViewValue, rowIndex, row)) // F3P: provide an hook for operations on restored index
+					lsSelectionRecord.add(row);
 			}
 		}
 
 		contentPanel.getModel().setSelection(lsSelectionRecord);
 	}
 
+	/** Hook to intercept 'restore selection' actions 
+	 * 
+	 * @param keyViewValue row view key
+	 * @param rowIndex row index
+	 * @param row row
+	 * @return false to skip restore selection
+	 */
+	public boolean onRestoreSelectedItemIndexInPage(Integer keyViewValue, int rowIndex, Object row)
+	{
+		return true;
+	}
 
 	protected AdempiereException getKeyNullException (){
 		String errorMessage = String.format("has null value at column %1$s use as key of view in info window %2$s",
@@ -1389,7 +1471,7 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 		if (keyColumValue instanceof Integer){
 			keyValue = (Integer)keyColumValue;
 		}else {
-			String msg = "column play keyView should is integer";
+			String msg = "keyView column must be integer";
 			AdempiereException ex = new AdempiereException (msg);
 			log.severe(msg);
 			throw ex;
@@ -1697,10 +1779,13 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
             else if (event.getTarget() == contentPanel && event.getName().equals(Events.ON_SELECT))
             {
             	setStatusSelected ();
-            	m_lastOnSelectItem = null;
+            	
             	SelectEvent<?, ?> selectEvent = (SelectEvent<?, ?>) event;
             	if (selectEvent.getReference() != null && selectEvent.getReference() instanceof Listitem)
-            		m_lastOnSelectItem = (Listitem) selectEvent.getReference();
+            	{
+            		Listitem m_lastOnSelectItem = (Listitem) selectEvent.getReference();
+            		m_lastSelectedIndex = m_lastOnSelectItem.getIndex();
+            		}
         }else if (event.getTarget() == contentPanel && event.getName().equals("onAfterRender")){
         	//IDEMPIERE-1334 at this event selected item from listBox and model is sync
         	enableButtons();
@@ -1710,18 +1795,34 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
             	if (event.getClass().equals(MouseEvent.class)){
             		return;
             	}
-            	if (contentPanel.isMultiple()) {
-            		//un-select all selected column
-            		if (m_lastOnSelectItem != null){
-            			contentPanel.getModel().clearSelection();
-            			int clickItemIndex = contentPanel.getIndexOfItem(m_lastOnSelectItem);
-            			Object selectedItemModle = contentPanel.getModel().get(clickItemIndex);
-            			contentPanel.getModel().addToSelection(selectedItemModle);
+            	if (contentPanel.isMultiple() && m_lastSelectedIndex >= 0) {
+					
+            		contentPanel.setSelectedIndex(m_lastSelectedIndex);
+					
+            		model.clearSelection();
+					List<Object> lsSelectedItem = new ArrayList<Object>();
+					lsSelectedItem.add(model.getElementAt(m_lastSelectedIndex));
+					model.setSelection(lsSelectedItem);
+					
+					int m_keyColumnIndex = contentPanel.getKeyColumnIndex();
+					for (int i = 0; i < contentPanel.getRowCount(); i++) {
+						// Find the IDColumn Key
+						Object data = contentPanel.getModel().getValueAt(i, m_keyColumnIndex);
+						if (data instanceof IDColumn) {
+							IDColumn dataColumn = (IDColumn) data;
+	
+							if (i == m_lastSelectedIndex) {
+								dataColumn.setSelected(true);
+							}
+							else {
+								dataColumn.setSelected(false);
+							}
+						}
             		}
-            		// clean selected record in cache
-            		recordSelectedData.clear();
             	}
             	onDoubleClick();
+            	contentPanel.repaint();
+            	m_lastSelectedIndex = -1;
             }
             else if (event.getTarget().equals(confirmPanel.getButton(ConfirmPanel.A_REFRESH)))
             {
@@ -1903,7 +2004,13 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	/**
 	 * Update relate info when selection in main info change
 	 */
-	protected void updateSubcontent (){};
+	protected void updateSubcontent (){ updateSubcontent(-1);};
+	
+	/**
+	 * Update relate info for a specific row, if targetRow < 0 update using selected row
+	 */
+	protected void updateSubcontent (int targetRow){};
+
 
 	/**
 	 * Reset parameter to default value or to empty value? implement at
@@ -1952,6 +2059,8 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 					// store in T_Selection table selected rows for Execute Process that retrieves from T_Selection in code.
 					DB.createT_SelectionNew(pInstanceID, getSaveKeys(getInfoColumnIDFromProcess(processModalDialog.getAD_Process_ID())),
 						null);
+					saveResultSelection(getInfoColumnIDFromProcess(processModalDialog.getAD_Process_ID()));
+					createT_Selection_InfoWindow(pInstanceID);
 				}else if (ProcessModalDialog.ON_WINDOW_CLOSE.equals(event.getName())){
 					if (processModalDialog.isCancel()){
 						//clear back
@@ -1970,13 +2079,155 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 
 						Clients.response(new AuEcho(InfoPanel.this, "onQueryCallback", null));
 					}
-
+					recordSelectedData.clear();
 				}
 
 		//HengSin -- end --
 			}
 		});
     }
+
+    
+    /**
+	 * save result values
+	 */
+	protected void saveResultSelection(int infoColumnId) {
+		int m_keyColumnIndex = contentPanel.getKeyColumnIndex();
+		if (m_keyColumnIndex == -1) {
+			return;
+		}
+
+		m_values = new LinkedHashMap<KeyNamePair,LinkedHashMap<String,Object>>();
+		
+		if (p_multipleSelection) {
+				
+			Map <Integer, List<Object>> selectedRow = getSelectedRowInfo();
+			
+			// for selected rows
+            for (Entry<Integer, List<Object>> selectedInfo : selectedRow.entrySet())
+            {
+            	// get key and viewID
+                Integer keyData = selectedInfo.getKey();
+                KeyNamePair kp = null;
+                
+                if (infoColumnId > 0){
+                	int dataIndex = columnDataIndex.get(infoColumnId) + p_layout.length;
+                	Object viewIDValue = selectedInfo.getValue().get(dataIndex);
+                	kp = new KeyNamePair(keyData, viewIDValue == null ? null : viewIDValue.toString());
+                }else{
+                	kp = new KeyNamePair(keyData, null);
+                }
+                
+                // get Data
+				LinkedHashMap<String, Object> values = new LinkedHashMap<String, Object>();
+				for(int col  = 0 ; col < p_layout.length; col ++)
+				{
+					// layout has same columns as selectedInfo
+					if (!p_layout[col].isReadOnly())
+						values.put(p_layout[col].getColumnName(), selectedInfo.getValue().get(col));
+				}
+				if(values.size() > 0)
+					m_values.put(kp, values);
+            }
+		}
+	} // saveResultSelection
+	
+	/**
+	 * Insert result values
+	 * @param AD_PInstance_ID
+	 */
+	public void createT_Selection_InfoWindow(int AD_PInstance_ID)
+	{
+		StringBuilder insert = new StringBuilder();
+		insert.append("INSERT INTO T_Selection_InfoWindow (AD_PINSTANCE_ID, T_SELECTION_ID, COLUMNNAME , VALUE_STRING, VALUE_NUMBER , VALUE_DATE ) VALUES(?,?,?,?,?,?) ");
+		for (Entry<KeyNamePair,LinkedHashMap<String, Object>> records : m_values.entrySet()) {
+			//set Record ID
+			
+				LinkedHashMap<String, Object> fields = records.getValue();
+				for(Entry<String, Object> field : fields.entrySet())
+				{
+					List<Object> parameters = new ArrayList<Object>();
+					parameters.add(AD_PInstance_ID);
+					
+					Object key = records.getKey();
+					
+					if(key instanceof KeyNamePair)
+					{
+						KeyNamePair knp = (KeyNamePair)key;
+						parameters.add(knp.getKey());
+					}
+					else
+					{
+						parameters.add(key);
+					}
+
+					parameters.add(field.getKey());
+					
+					Object data = field.getValue();
+					// set Values					
+					if (data instanceof IDColumn)
+					{
+						IDColumn id = (IDColumn) data;
+						parameters.add(null);
+						parameters.add(id.getRecord_ID());
+						parameters.add(null);
+					}					
+					else if (data instanceof String)
+					{
+						parameters.add(data);
+						parameters.add(null);
+						parameters.add(null);
+					}
+					else if (data instanceof BigDecimal || data instanceof Integer || data instanceof Double)
+					{
+						parameters.add(null);
+						if(data instanceof Double)
+						{	
+							BigDecimal value = BigDecimal.valueOf((Double)data);
+							parameters.add(value);
+						}	
+						else	
+							parameters.add(data);
+						parameters.add(null);
+					}
+					else if (data instanceof Integer)
+					{
+						parameters.add(null);
+						parameters.add((Integer)data);
+						parameters.add(null);
+					}
+					else if (data instanceof Timestamp || data instanceof Date)
+					{
+						parameters.add(null);
+						parameters.add(null);
+						if(data instanceof Date)
+						{
+							Timestamp value = new Timestamp(((Date)data).getTime());
+							parameters.add(value);
+						}
+						else 
+						parameters.add(data);
+					}
+					else if(data instanceof KeyNamePair)
+					{
+						KeyNamePair knpData = (KeyNamePair)data;
+						
+						parameters.add(null);
+						parameters.add(knpData.getKey());
+						parameters.add(null);						
+					}
+					else
+					{
+						parameters.add(data);
+						parameters.add(null);
+						parameters.add(null);
+					}
+					DB.executeUpdateEx(insert.toString(),parameters.toArray() , null);
+						
+				}
+		}
+	} // createT_Selection_InfoWindow
+	
 
     /**
      * Get InfoColumnID of infoProcess have processID is processId
@@ -2016,10 +2267,15 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
     			for(Object obj : headers)
     			{
     				Listheader header = (Listheader) obj;
+    				// idempiere use mix method. sometime call model method, sometime call component method
+    				// so index can be difference on complicate case, just wait to fix
+    				if (header.getColumnIndex() == indexOrderColumn)
+		              header.setSortDirection(isColumnSortAscending?"ascending":"descending");
+		            else
     				header.setSortDirection("natural");
     			}
     		}
-    		m_sqlUserOrder="";
+//    		m_sqlUserOrder="";
     		// event == null mean direct call from reset button
     		if (event == null)
     			m_count = 0;
@@ -2154,50 +2410,23 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	public void sort(Comparator<Object> cmpr, boolean ascending) {
 		updateListSelected();
 		WListItemRenderer.ColumnComparator lsc = (WListItemRenderer.ColumnComparator) cmpr;
-		if (m_useDatabasePaging)
-		{
+		
+		// keep column order
 			int col = lsc.getColumnIndex();
-			String colsql = p_layout[col].getColSQL().trim();
-			int lastSpaceIdx = colsql.lastIndexOf(" ");
-			if (lastSpaceIdx > 0)
-			{
-				String tmp = colsql.substring(0, lastSpaceIdx).trim();
-				char last = tmp.charAt(tmp.length() - 1);
+		indexOrderColumn = col;
+		isColumnSortAscending = ascending;
+		m_sqlUserOrder = null; // clear cache value
 
-				String alias = colsql.substring(lastSpaceIdx).trim();
-				boolean hasAlias = alias.matches("^[a-zA-Z_][a-zA-Z0-9_]*$"); // valid SQL alias - starts with letter then digits, letters, underscore
-
-				if (tmp.toLowerCase().endsWith("as") && hasAlias)
-				{
-					colsql = alias;
-				}
-				else if (!(last == '*' || last == '-' || last == '+' || last == '/' || last == '>' || last == '<' || last == '='))
-				{
-					if (alias.startsWith("\"") && alias.endsWith("\""))
+		if (m_useDatabasePaging)
 					{
-						colsql = alias;
-					}
-					else
-					{
-						if (hasAlias)
-						{
-							colsql = alias;
-						}
-					}
-				}
-			}
-			m_sqlUserOrder = " ORDER BY " + colsql;
-			if (!ascending)
-				m_sqlUserOrder += " DESC ";
 			executeQuery();
-			renderItems();
 		}
 		else
 		{
 			Collections.sort(line, lsc);
+		}
 			renderItems();
 		}
-	}
 
     public boolean isLookup()
     {
@@ -2287,6 +2516,10 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 
 	public void setGridfield(GridField m_gridfield) {
 		this.m_gridfield = m_gridfield;
+	}
+
+	public int getPageSize() {
+		return pageSize;
 	}
 }	//	Info
 
