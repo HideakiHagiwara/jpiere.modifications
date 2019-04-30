@@ -50,7 +50,7 @@ import org.compiere.util.ValueNamePair;
  *
  * @author 	Jorg Janke
  * @version 	$Id: DataEngine.java,v 1.3 2006/07/30 00:53:02 jjanke Exp $
- * 
+ *
  * @author Teo Sarca, SC ARHIPAC SERVICE SRL
  * 				<li>BF [ 1761891 ] Included print format with report view attached issue
  * 				<li>BF [ 1807368 ] DataEngine does not close DB connection
@@ -60,7 +60,7 @@ import org.compiere.util.ValueNamePair;
  * @author Teo Sarca, teo.sarca@gmail.com
  * 				<li>BF [ 2876268 ] DataEngine: error on text long fields
  * 					https://sourceforge.net/tracker/?func=detail&aid=2876268&group_id=176962&atid=879332
- * @author victor.perez@e-evolution.com 
+ * @author victor.perez@e-evolution.com
  *				<li>FR [ 2011569 ] Implementing new Summary flag in Report View  http://sourceforge.net/tracker/index.php?func=detail&aid=2011569&group_id=176962&atid=879335
  * @author Paul Bowden (phib)
  * 				<li> BF 2908435 Virtual columns with lookup reference types can't be printed
@@ -78,7 +78,7 @@ public class DataEngine
 	{
 		this(language, null);
 	}	//	DataEngine
-	
+
 	/**
 	 *	Constructor
 	 *	@param language Language of the data (for translation)
@@ -109,18 +109,18 @@ public class DataEngine
 	private String			m_runningTotalString = null;
 	/** TrxName String					*/
 	private String			m_trxName = null;
-	/** Report Summary FR [ 2011569 ]**/ 
+	/** Report Summary FR [ 2011569 ]**/
 	private boolean 		m_summary = false;
 	/** Key Indicator in Report			*/
 	public static final String KEY = "*";
 
 	private int jp_LimitCount = 0; //JPIERE-0264:Limit Report Rows
-	
+
 	private int getLimitCount()
 	{
 		return jp_LimitCount;
 	}
-	
+
 	private void setLimitCount(int count)
 	{
 		jp_LimitCount = count;
@@ -138,7 +138,7 @@ public class DataEngine
 	{
 		return getPrintData(ctx, format, query, false);
 	}
-	
+
 	/**************************************************************************
 	 * 	Load Data
 	 *
@@ -152,8 +152,8 @@ public class DataEngine
 	{
 		MQuery queryCopy = query.deepCopy();
 
-		/** Report Summary FR [ 2011569 ]**/ 
-		m_summary = summary; 
+		/** Report Summary FR [ 2011569 ]**/
+		m_summary = summary;
 
 		if (format == null)
 			throw new IllegalStateException ("No print format");
@@ -174,7 +174,7 @@ public class DataEngine
 			PreparedStatement pstmt = null;
 			ResultSet rs = null;
 			try
-			{				
+			{
 				pstmt = DB.prepareStatement(sql.toString(), m_trxName);
 				pstmt.setInt(1, format.getAD_ReportView_ID());
 				rs = pstmt.executeQuery();
@@ -192,7 +192,7 @@ public class DataEngine
 							queryCopy.addRestriction(Env.parseContext(ctx, 0, whereClause.toString(), false, true));
 						}
 					}
-					
+
 					int limitCount = rs.getInt(5);//JPIERE-0264:Limit Report Rows
 					if(limitCount > 0)
 						setLimitCount(limitCount);
@@ -226,7 +226,7 @@ public class DataEngine
 				tableName += "t";
 				format.setTranslationViewQuery (queryCopy);
 			}
-		}		
+		}
 		//
 		PrintData pd = getPrintDataInfo (ctx, format, queryCopy, reportName, tableName);
 		if (pd == null)
@@ -235,7 +235,7 @@ public class DataEngine
 		return pd;
 	}	//	getPrintData
 
-	
+
 	/**************************************************************************
 	 * 	Create Load SQL and update PrintData Info
 	 *
@@ -311,15 +311,15 @@ public class DataEngine
 			rs = pstmt.executeQuery();
 
 			m_synonym = "A";		//	synonym
-			
+
 			// init regular object to replace table name in virtual column
 			String orgTable = null;
-			Pattern regTranslateTable = null; 
+			Pattern regTranslateTable = null;
 			if (tableName.toLowerCase().endsWith("_vt")){
 				orgTable = MTable.getTableName(ctx, format.getAD_Table_ID());
 				regTranslateTable =  Pattern.compile("\\b" + orgTable + "\\b", Pattern.CASE_INSENSITIVE);
 			}
-			
+
 			while (rs.next())
 			{
 				//	get Values from record
@@ -371,15 +371,15 @@ public class DataEngine
 					m_group.addFunction(ColumnName, PrintDataFunction.F_DEVIATION);
 				if ("Y".equals(rs.getString(20)))	//	isRunningTotal
 					//	RunningTotalLines only once - use max
-					m_runningTotalLines = Math.max(m_runningTotalLines, rs.getInt(21));	
+					m_runningTotalLines = Math.max(m_runningTotalLines, rs.getInt(21));
 
 				//	General Info
 				boolean IsPrinted = "Y".equals(rs.getString(15));
 				//int SortNo = rs.getInt(16);
 				boolean isPageBreak = "Y".equals(rs.getString(17));
-				
+
 				String formatPattern = rs.getString(25);
-				
+
 				//BEGIN http://jira.idempiere.com/browse/IDEMPIERE-153
 				boolean isDesc = "Y".equals(rs.getString(26));
 				//END
@@ -403,7 +403,7 @@ public class DataEngine
 					;
 				}
 				//	-- Parent, TableDir (and unqualified Search) --
-				else if ( /* (IsParent && DisplayType.isLookup(AD_Reference_ID)) || <-- IDEMPIERE-71 Carlos Ruiz - globalqss */ 
+				else if ( /* (IsParent && DisplayType.isLookup(AD_Reference_ID)) || <-- IDEMPIERE-71 Carlos Ruiz - globalqss */
 						AD_Reference_ID == DisplayType.TableDir
 						|| (AD_Reference_ID == DisplayType.Search && AD_Reference_Value_ID == 0)
 					)
@@ -468,7 +468,7 @@ public class DataEngine
 				}
 
 				//	-- List or Button with ReferenceValue --
-				else if (AD_Reference_ID == DisplayType.List 
+				else if (AD_Reference_ID == DisplayType.List
 					|| (AD_Reference_ID == DisplayType.Button && AD_Reference_Value_ID != 0))
 				{
 					if (ColumnSQL.length() > 0)
@@ -524,9 +524,9 @@ public class DataEngine
 						lookupSQL = ColumnSQL;
 					}
 					//	TableName, DisplayColumn
-					String table = ""; 
-					String key = ""; 
-					String display = ""; 
+					String table = "";
+					String key = "";
+					String display = "";
 					String synonym = null;
 					//
 					if (AD_Reference_ID == DisplayType.Location)
@@ -613,7 +613,7 @@ public class DataEngine
 							groupByColumns.add(sb.toString());
 						orderName = ColumnName;		//	no prefix for synonym
 					}
-					pdc = new PrintDataColumn(AD_Column_ID, ColumnName, 
+					pdc = new PrintDataColumn(AD_Column_ID, ColumnName,
 						AD_Reference_ID, FieldLength, ColumnName, isPageBreak);
 				}
 
@@ -622,7 +622,7 @@ public class DataEngine
 				{
 					if (AD_Column_ID == orderAD_Column_IDs[i])
 					{
-						
+
 						//BEGIN fernandinho - http://jira.idempiere.com/browse/IDEMPIERE-153
 						if (isDesc)
 							orderName += " DESC";
@@ -705,7 +705,7 @@ public class DataEngine
 			if (role.getAD_Role_ID() == 0 && !Ini.isClient())
 				;	//	System Access
 			else
-				finalSQL = new StringBuilder (role.addAccessSQL (finalSQL.toString (), 
+				finalSQL = new StringBuilder (role.addAccessSQL (finalSQL.toString (),
 					tableName, MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO));
 		}
 
@@ -737,7 +737,7 @@ public class DataEngine
 				finalSQL.append(by);
 			}
 		}	//	order by
-		
+
 		//JPIERE-0264:Limit Report Rows
 		if(getLimitCount() > 0)
 			finalSQL.append(" FETCH FIRST " + getLimitCount() + " ROWS ONLY " );
@@ -829,7 +829,7 @@ public class DataEngine
 		return tr;
 	}	//  getTableReference
 
-	
+
 	/**************************************************************************
 	 * 	Load Data into PrintData
 	 * 	@param pd print data with SQL and ColumnInfo set
@@ -851,6 +851,7 @@ public class DataEngine
 		{
 			pstmt = DB.prepareNormalReadReplicaStatement(pd.getSQL(), m_trxName);
 			rs = pstmt.executeQuery();
+
 			//	Row Loop
 			while (rs.next())
 			{
@@ -864,14 +865,14 @@ public class DataEngine
 					ArrayList<PrintDataColumn> changedGroups = new ArrayList<PrintDataColumn>();
 					ArrayList<Object> changedValues = new ArrayList<Object>();
 					boolean force = false;
-					
+
 					//	Check Columns for Function Columns
-					for (int i = 0; i < pd.getColumnInfo().length; i++)	
+					for (int i = 0; i < pd.getColumnInfo().length; i++)
 					{
 						PrintDataColumn group_pdc = pd.getColumnInfo()[i];
 						if (!m_group.isGroupColumn(group_pdc.getColumnName()))
 							continue;
-						
+
 						//	Group change
 						Object value = m_group.groupChange(group_pdc.getColumnName(), rs.getObject(group_pdc.getAlias()), force);
 						if (value != null)	//	Group change
@@ -881,12 +882,12 @@ public class DataEngine
 							force = true; // all subsequent groups force change
 						}
 					}
-					
+
 					for (int j = changedGroups.size() - 1; j >= 0; j--) //	backwards (least group first)
 					{
 						PrintDataColumn group_pdc = changedGroups.get(j);
 						Object value = changedValues.get(j);
-						
+
 							char[] functions = m_group.getFunctions(group_pdc.getColumnName());
 							for (int f = 0; f < functions.length; f++)
 							{
@@ -911,9 +912,9 @@ public class DataEngine
 									else if (m_group.isFunctionColumn(pdc.getColumnName(), functions[f]))
 									{
 										pd.addNode(new PrintDataElement(pdc.getColumnName(),
-											m_group.getValue(group_pdc.getColumnName(), 
-												pdc.getColumnName(), functions[f]), 
-											PrintDataFunction.getFunctionDisplayType(functions[f], pdc.getDisplayType()), 
+											m_group.getValue(group_pdc.getColumnName(),
+												pdc.getColumnName(), functions[f]),
+											PrintDataFunction.getFunctionDisplayType(functions[f], pdc.getDisplayType()),
 												false, pdc.isPageBreak(), pdc.getFormatPattern()));
 									}
 								}	//	 for all columns
@@ -930,8 +931,8 @@ public class DataEngine
 				//	new row ---------------------------------------------------
 				printRunningTotal(pd, levelNo, rowNo++);
 
-				/** Report Summary FR [ 2011569 ]**/ 
-				if(!m_summary)					
+				/** Report Summary FR [ 2011569 ]**/
+				if(!m_summary)
 					pd.addRow(false, levelNo);
 				int counter = 1;
 				//	get columns
@@ -1057,7 +1058,7 @@ public class DataEngine
 					}	//	Non-Key Column
 					if (pde != null)
 					{
-						/** Report Summary FR [ 2011569 ]**/ 
+						/** Report Summary FR [ 2011569 ]**/
 						if(!m_summary)
 							pd.addNode(pde);
 						m_group.addValue(pde.getColumnName(), pde.getFunctionValue());
@@ -1111,7 +1112,7 @@ public class DataEngine
 							else if (m_group.isFunctionColumn(pdc.getColumnName(), functions[f]))
 							{
 								pd.addNode(new PrintDataElement(pdc.getColumnName(),
-									m_group.getValue(group_pdc.getColumnName(), 
+									m_group.getValue(group_pdc.getColumnName(),
 										pdc.getColumnName(), functions[f]),
 									PrintDataFunction.getFunctionDisplayType(functions[f],
 											pdc.getDisplayType()),pdc.getFormatPattern()));
@@ -1148,7 +1149,7 @@ public class DataEngine
 					else if (m_group.isFunctionColumn(pdc.getColumnName(), functions[f]))
 					{
 						pd.addNode(new PrintDataElement(pdc.getColumnName(),
-							m_group.getValue(PrintDataGroup.TOTAL, 
+							m_group.getValue(PrintDataGroup.TOTAL,
 								pdc.getColumnName(), functions[f]),
 							PrintDataFunction.getFunctionDisplayType(functions[f], pdc.getDisplayType()), pdc.getFormatPattern()));
 					}
@@ -1160,14 +1161,22 @@ public class DataEngine
 		if (pd.getRowCount() == 0)
 		{
 			if (CLogMgt.isLevelFiner())
-				log.warning("NO Rows - ms=" + (System.currentTimeMillis()-m_startTime) 
+				log.warning("NO Rows - ms=" + (System.currentTimeMillis()-m_startTime)
 					+ " - " + pd.getSQL());
 			else
-				log.warning("NO Rows - ms=" + (System.currentTimeMillis()-m_startTime)); 
+				log.warning("NO Rows - ms=" + (System.currentTimeMillis()-m_startTime));
 		}
 		else
 			if (log.isLoggable(Level.INFO)) log.info("Rows=" + pd.getRowCount()
 				+ " - ms=" + (System.currentTimeMillis()-m_startTime));
+
+		//JPIERE-0264
+		if(getLimitCount() > 0 && rowNo >= getLimitCount())
+		{
+			pd.addRow(true, 0);
+			pd.addNode(new PrintDataElement(pd.getColumnInfo()[0].getColumnName(), Msg.getMsg(Env.getCtx(),"JP_UpToRows",new Object[]{getLimitCount()}), DisplayType.String, null));
+		}
+
 	}	//	loadPrintData
 
 	/**
@@ -1181,11 +1190,11 @@ public class DataEngine
 		if (m_runningTotalLines < 1)	//	-1 = none
 			return;
 		if (log.isLoggable(Level.FINE))
-			log.fine("(" + m_runningTotalLines + ") - Row=" + rowNo 
+			log.fine("(" + m_runningTotalLines + ") - Row=" + rowNo
 					+ ", mod=" + rowNo % m_runningTotalLines);
 		if (rowNo % m_runningTotalLines != 0)
 			return;
-			
+
 		if (log.isLoggable(Level.FINE))
 			log.fine("Row=" + rowNo);
 		PrintDataColumn pdc = null;
@@ -1216,7 +1225,7 @@ public class DataEngine
 		}	//	 two lines
 	}	//	printRunningTotal
 
-	
+
 	/*************************************************************************
 	 * 	Test
 	 * 	@param args args
@@ -1234,7 +1243,7 @@ public class DataEngine
 	//	pd.dump();
 	//	pd.createXML(new javax.xml.transform.stream.StreamResult(System.out));
 	}
-		
+
 }	//	DataEngine
 
 /**
