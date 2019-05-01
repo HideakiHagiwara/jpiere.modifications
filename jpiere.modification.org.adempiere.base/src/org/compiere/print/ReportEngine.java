@@ -14,9 +14,7 @@
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_INVENTORY;
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_MOVEMENT;
-import static org.compiere.model.SystemIDs.TABLE_AD_TABLE;
+import static org.compiere.model.SystemIDs.*;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -731,7 +729,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 						{
 							td td = new td();
 							tr.addElement(td);
-							Object obj = m_printData.getNode(new Integer(item.getAD_Column_ID()));
+							Object obj = m_printData.getNode(Integer.valueOf(item.getAD_Column_ID()));
 							if (obj == null){
 								td.addElement("&nbsp;");
 								if (colSuppressRepeats[printColIndex]){
@@ -955,7 +953,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 						else
 						{
 							printColIndex++;
-							Object obj = m_printData.getNode(new Integer(item.getAD_Column_ID()));
+							Object obj = m_printData.getNode(Integer.valueOf(item.getAD_Column_ID()));
 							String data = "";
 							if (obj == null){
 								if (colSuppressRepeats[printColIndex]){
