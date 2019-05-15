@@ -1687,6 +1687,8 @@ public class MInOut extends X_M_InOut implements DocAction
 		MInOut dropShipment = createDropShipment();
 		if (dropShipment != null)
 			info.append(" - @DropShipment@: @M_InOut_ID@=").append(dropShipment.getDocumentNo());
+		if (dropShipment != null)
+			addDocsPostProcess(dropShipment);
 		//	User Validation
 		String valid = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
 		if (valid != null)
@@ -1778,7 +1780,7 @@ public class MInOut extends X_M_InOut implements DocAction
 		dropShipment.setDocAction(DocAction.ACTION_Complete);
 		// added AdempiereException by Zuhri
 		if (!dropShipment.processIt(DocAction.ACTION_Complete))
-			throw new AdempiereException("Failed when processing document - " + dropShipment.getProcessMsg());
+			throw new AdempiereException(Msg.getMsg(getCtx(), "FailedProcessingDocument") + " - " + dropShipment.getProcessMsg());
 		// end added
 		dropShipment.saveEx();
 
@@ -2048,7 +2050,7 @@ public class MInOut extends X_M_InOut implements DocAction
 				counter.setDocAction(counterDT.getDocAction());
 				// added AdempiereException by zuhri
 				if (!counter.processIt(counterDT.getDocAction()))
-					throw new AdempiereException("Failed when processing document - " + counter.getProcessMsg());
+					throw new AdempiereException(Msg.getMsg(getCtx(), "FailedProcessingDocument") + " - " + counter.getProcessMsg());
 				// end added
 				counter.saveEx(get_TrxName());
 			}

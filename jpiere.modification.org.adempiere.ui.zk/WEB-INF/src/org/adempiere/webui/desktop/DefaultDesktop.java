@@ -1,15 +1,18 @@
 /******************************************************************************
- * Product: JPiere                                                            *
- * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
- *                                                                            *
- * This program is free software, you can redistribute it and/or modify it    *
+ * Product: Posterita Ajax UI 												  *
+ * Copyright (C) 2007 Posterita Ltd.  All Rights Reserved.                    *
+ * This program is free software; you can redistribute it and/or modify it    *
  * under the terms version 2 of the GNU General Public License as published   *
  * by the Free Software Foundation. This program is distributed in the hope   *
- * that it will be useful, but WITHOUT ANY WARRANTY.                          *
+ * that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           *
  * See the GNU General Public License for more details.                       *
- *                                                                            *
- * JPiere is maintained by OSS ERP Solutions Co., Ltd.                        *
- * (http://www.oss-erp.co.jp)                                                 *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program; if not, write to the Free Software Foundation, Inc.,    *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
+ * For the text or an alternative of this public license, you may reach us    *
+ * Posterita Ltd., 3, Draper Avenue, Quatre Bornes, Mauritius                 *
+ * or via info@posterita.org or http://www.posterita.org/                     *
  *****************************************************************************/
 
 package org.adempiere.webui.desktop;
@@ -131,7 +134,7 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 6775071898539380777L;
+	private static final long serialVersionUID = 7189914859100400758L;
 
 	private static final String IMAGES_UPARROW_PNG = "images/collapse-header.png";
 
@@ -456,7 +459,6 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
         	showHeader.setImage(ThemeManager.getThemeResource(IMAGES_THREELINE_MENU_PNG));
         	showHeader.addEventListener(Events.ON_CLICK, this);
         	showHeader.setSclass("window-container-toolbar-btn");
-        	showHeader.setStyle("cursor: pointer; border: 1px solid transparent; padding: 2px;");
         	showHeader.setVisible(false);
 
         	max = new ToolBarButton();
@@ -464,7 +466,6 @@ public class DefaultDesktop extends TabbedDesktop implements MenuListener, Seria
         	max.setImage(ThemeManager.getThemeResource(IMAGES_UPARROW_PNG));
         	max.addEventListener(Events.ON_CLICK, this);
         	max.setSclass("window-container-toolbar-btn");
-        	max.setStyle("cursor: pointer; border: 1px solid transparent; padding: 2px;");
 		}
 
         contextHelp = new ToolBarButton();

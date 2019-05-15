@@ -17,7 +17,7 @@
 
 package org.adempiere.webui.window;
 
-import static org.compiere.model.SystemIDs.*;
+import static org.compiere.model.SystemIDs.REFERENCE_YESNO;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -134,7 +134,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = -4461202150492732658L;
+	private static final long serialVersionUID = -2476692172080549315L;
 
 	// values and label for history combo
 	private static final String HISTORY_DAY_ALL = "All";
@@ -642,7 +642,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         div.appendChild(labelHistory);
         div.appendChild(historyCombo);
         historyCombo.setStyle("margin-left: 3px; margin-right: 3px; position: relative; vertical-align: middle;");
-
+        div.setClass("toolbar");
         winMain = new MultiTabPart();
         winMain.createPart(layout);
         winMain.getComponent().setStyle("position: relative; margin-left: auto; margin-right: auto; margin-top: 3px; margin-bottom: 3px;");
@@ -663,6 +663,7 @@ public class FindWindow extends Window implements EventListener<Event>, ValueCha
         initSimple();
         initAdvanced();
         /** START DEVCOFFEE **/
+        statusBar.setClass("statusbar");
 //        layout.appendChild(statusBar); //JPIERE-0181:Comment Out - IDEMPIERE-1643 Adding a status bar for FindWindow
         /** START DEVCOFFEE **/
 

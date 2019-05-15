@@ -60,7 +60,7 @@ public class MMatchPO extends X_M_MatchPO
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = -3669451656879485463L;
+	private static final long serialVersionUID = 487498668807522050L;
 
 	/**
 	 * 	Get PO Match with order/invoice

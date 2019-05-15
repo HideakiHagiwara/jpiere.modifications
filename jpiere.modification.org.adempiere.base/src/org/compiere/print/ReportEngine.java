@@ -1,20 +1,25 @@
 /******************************************************************************
- * Product: JPiere                                                            *
- * Copyright (C) Hideaki Hagiwara (h.hagiwara@oss-erp.co.jp)                  *
- *                                                                            *
- * This program is free software, you can redistribute it and/or modify it    *
+ * Product: Adempiere ERP & CRM Smart Business Solution                       *
+ * Copyright (C) 1999-2006 ComPiere, Inc. All Rights Reserved.                *
+ * This program is free software; you can redistribute it and/or modify it    *
  * under the terms version 2 of the GNU General Public License as published   *
  * by the Free Software Foundation. This program is distributed in the hope   *
- * that it will be useful, but WITHOUT ANY WARRANTY.                          *
+ * that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           *
  * See the GNU General Public License for more details.                       *
- *                                                                            *
- * JPiere is maintained by OSS ERP Solutions Co., Ltd.                        *
- * (http://www.oss-erp.co.jp)                                                 *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program; if not, write to the Free Software Foundation, Inc.,    *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
+ * For the text or an alternative of this public license, you may reach us    *
+ * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
+ * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.*;
+import static org.compiere.model.SystemIDs.PROCESS_RPT_M_INVENTORY;
+import static org.compiere.model.SystemIDs.PROCESS_RPT_M_MOVEMENT;
+import static org.compiere.model.SystemIDs.TABLE_AD_TABLE;
 
 import java.awt.Color;
 import java.awt.Font;
