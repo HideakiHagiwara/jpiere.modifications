@@ -17,8 +17,7 @@
 
 package org.adempiere.webui.adwindow;
 
-import static org.compiere.model.SystemIDs.PROCESS_AD_CHANGELOG_REDO;
-import static org.compiere.model.SystemIDs.PROCESS_AD_CHANGELOG_UNDO;
+import static org.compiere.model.SystemIDs.*;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -123,7 +122,9 @@ import org.zkoss.zul.Menuitem;
 import org.zkoss.zul.Menupopup;
 import org.zkoss.zul.Window.Mode;
 
-import jpiere.base.plugin.org.adempiere.model.MAttachmentFileRecord; //JPIERE-0437
+import jpiere.modification.org.adempiere.model.MAttachmentFileRecord;  //JPIERE-0437
+
+
 
 /**
  *
