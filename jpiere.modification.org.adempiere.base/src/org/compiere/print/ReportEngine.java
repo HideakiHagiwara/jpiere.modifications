@@ -879,7 +879,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			log.log(Level.SEVERE, "(w)", e);
 			throw new AdempiereException(e);
 		}
-		return false;
+		return true;
 	}	//	createHTML
 
 
@@ -1017,8 +1017,9 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		catch (Exception e)
 		{
 			log.log(Level.SEVERE, "(w)", e);
+			return false;
 		}
-		return false;
+		return true;
 	}	//	createCSV
 
 	/**
@@ -1123,7 +1124,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		try
 		{
 			if (file == null)
-				file = File.createTempFile ("ReportEngine", ".pdf");
+				file = File.createTempFile (makePrefix(getName()), ".pdf");
 		}
 		catch (IOException e)
 		{
@@ -1134,6 +1135,106 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		return null;
 	}	//	getPDF
 
+	/**************************************************************************
+	 * 	Create HTML file.
+	 * 	(created in temporary storage)
+	 *	@return HTML file
+	 */
+	public File getHTML()
+	{
+		return getHTML(null);
+	}	//	getHTML
+
+	/**
+	 * 	Create HTML file.
+	 * 	@param file file
+	 *	@return HTML file
+	 */
+	public File getHTML(File file)
+	{
+		try
+		{
+			if (file == null)
+				file = File.createTempFile (makePrefix(getName()), ".html");
+		}
+		catch (IOException e)
+		{
+			log.log(Level.SEVERE, "", e);
+		}
+		if (createHTML(file, false, Env.getLanguage(getCtx())))
+			return file;
+		return null;
+	}	//	getHTML
+	
+	/**************************************************************************
+	 * 	Create CSV file.
+	 * 	(created in temporary storage)
+	 *	@return CSV file
+	 */
+	public File getCSV()
+	{
+		return getCSV(null);
+	}	//	getCSV
+
+	/**
+	 * 	Create CSV file.
+	 * 	@param file file
+	 *	@return CSV file
+	 */
+	public File getCSV(File file)
+	{
+		try
+		{
+			if (file == null)
+				file = File.createTempFile (makePrefix(getName()), ".csv");
+		}
+		catch (IOException e)
+		{
+			log.log(Level.SEVERE, "", e);
+		}
+		if (createCSV(file, ',', Env.getLanguage(getCtx())))
+			return file;
+		return null;
+	}	//	getCSV
+	
+	/**************************************************************************
+	 * 	Create XLS file.
+	 * 	(created in temporary storage)
+	 *	@return XLS file
+	 */
+	public File getXLS()
+	{
+		return getXLS(null);
+	}	//	getXLS
+
+	/**
+	 * 	Create XLS file.
+	 * 	@param file file
+	 *	@return XLS file
+	 */
+	public File getXLS(File file)
+	{
+		try
+		{
+			if (file == null)
+				file = File.createTempFile (makePrefix(getName()), ".xls");
+		}
+		catch (IOException e)
+		{
+			log.log(Level.SEVERE, "", e);
+		}
+		try 
+		{
+			createXLS(file, Env.getLanguage(getCtx()));
+			return file;
+		} 
+		catch (Exception e)
+		{
+			log.log(Level.SEVERE, "", e);
+			return null;
+		}
+	}	//	getXLS
+	
 	/**
 	 * 	Create PDF File
 	 * 	@param file file
@@ -1187,6 +1288,19 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		return file2.exists();
 	}	//	createPDF
 
+	private String makePrefix(String name) {
+		StringBuilder prefix = new StringBuilder();
+		char[] nameArray = name.toCharArray();
+		for (char ch : nameArray) {
+			if (Character.isLetterOrDigit(ch)) {
+				prefix.append(ch);
+			} else {
+				prefix.append("_");
+			}
+		}
+		return prefix.toString();
+	}
+	
 	/**
 	 * 	Create PDF as Data array
 	 *	@return pdf data
