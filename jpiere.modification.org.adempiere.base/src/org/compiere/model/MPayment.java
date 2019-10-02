@@ -72,20 +72,20 @@ import org.compiere.util.ValueNamePair;
  *  @author 	Jorg Janke
  *  @author victor.perez@e-evolution.com, e-Evolution http://www.e-evolution.com
  * 			<li>FR [ 1948157  ]  Is necessary the reference for document reverse
- *  		@see http://sourceforge.net/tracker/?func=detail&atid=879335&aid=1948157&group_id=176962 
- *			<li> FR [ 1866214 ]  
- *			@sse http://sourceforge.net/tracker/index.php?func=detail&aid=1866214&group_id=176962&atid=879335 
- * 			<li> FR [ 2520591 ] Support multiples calendar for Org 
- *			@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962 
+ *  		@see http://sourceforge.net/tracker/?func=detail&atid=879335&aid=1948157&group_id=176962
+ *			<li> FR [ 1866214 ]
+ *			@sse http://sourceforge.net/tracker/index.php?func=detail&aid=1866214&group_id=176962&atid=879335
+ * 			<li> FR [ 2520591 ] Support multiples calendar for Org
+ *			@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962
  *
  *  @author Carlos Ruiz - globalqss [ 2141475 ] Payment <> allocations must not be completed - implement lots of validations on prepareIt
  *  @version 	$Id: MPayment.java,v 1.4 2006/10/02 05:18:39 jjanke Exp $
  */
-public class MPayment extends X_C_Payment 
+public class MPayment extends X_C_Payment
 	implements DocAction, ProcessCall, PaymentInterface
 {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -6268462097642919346L;
 
@@ -109,8 +109,8 @@ public class MPayment extends X_C_Payment
 		list.toArray(retValue);
 		return retValue;
 	}	//	getOfBPartner
-	
-	
+
+
 	/**************************************************************************
 	 *  Default Constructor
 	 *  @param ctx context
@@ -154,7 +154,7 @@ public class MPayment extends X_C_Payment
 			setTenderType(TENDERTYPE_Check);
 		}
 	}   //  MPayment
-	
+
 	/**
 	 *  Load Constructor
 	 *  @param ctx context
@@ -174,10 +174,10 @@ public class MPayment extends X_C_Payment
 	private static CLogger		s_log = CLogger.getCLogger (MPayment.class);
 	/** Error Message						*/
 	private String				m_errorMessage = null;
-	
+
 	/** Reversal Indicator			*/
 	public static String	REVERSE_INDICATOR = "^";
-	
+
 	/**
 	 *  Reset Payment to new status
 	 */
@@ -209,7 +209,7 @@ public class MPayment extends X_C_Payment
 	{
 		return "X".equals(getTenderType());
 	}	//	isCashTrx
-	
+
 	/**
 	 * Is Cashbook Trx
 	 * @return true if this is a cashbook trx
@@ -217,7 +217,7 @@ public class MPayment extends X_C_Payment
 	public boolean isCashbookTrx() {
 		return isCashTrx() && !MSysConfig.getBooleanValue(MSysConfig.CASH_AS_PAYMENT, true , getAD_Client_ID());
 	}
-	
+
 	/**************************************************************************
 	 *  Set Credit Card.
 	 *  Need to set PatmentProcessor after Amount/Currency Set
@@ -264,7 +264,7 @@ public class MPayment extends X_C_Payment
 		String creditCardVV, String creditCardExp)
 	{
 		return setCreditCard(TrxType, creditCardType, creditCardNumber,
-			creditCardVV, MPaymentValidate.getCreditCardExpMM(creditCardExp), 
+			creditCardVV, MPaymentValidate.getCreditCardExpMM(creditCardExp),
 			MPaymentValidate.getCreditCardExpYY(creditCardExp));
 	}   //  setCreditCard
 
@@ -309,7 +309,7 @@ public class MPayment extends X_C_Payment
 	 *  @param accountNo account
 	 *  @return true if valid
 	 */
-	public boolean setBankACH (int C_BankAccount_ID, boolean isReceipt, String tenderType, 
+	public boolean setBankACH (int C_BankAccount_ID, boolean isReceipt, String tenderType,
 		String routingNo, String accountNo)
 	{
 		setTenderType (tenderType);
@@ -376,14 +376,14 @@ public class MPayment extends X_C_Payment
 	 *  @param checkNo chack no
 	 *  @return true if valid
 	 */
-	public boolean setBankCheck (int C_BankAccount_ID, boolean isReceipt, 
+	public boolean setBankCheck (int C_BankAccount_ID, boolean isReceipt,
 		String routingNo, String accountNo, String checkNo)
 	{
 		setTenderType (TENDERTYPE_Check);
 		setIsReceipt (isReceipt);
 		//
 		if (C_BankAccount_ID > 0
-			&& (routingNo == null || routingNo.length() == 0 
+			&& (routingNo == null || routingNo.length() == 0
 				|| accountNo == null || accountNo.length() == 0))
 			setBankAccountDetails(C_BankAccount_ID);
 		else
@@ -415,7 +415,7 @@ public class MPayment extends X_C_Payment
 			+ "FROM C_BankAccount ba"
 			+ " INNER JOIN C_Bank b ON (ba.C_Bank_ID=b.C_Bank_ID) "
 			+ "WHERE C_BankAccount_ID=?";
-		PreparedStatement pstmt = null; 
+		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try
 		{
@@ -463,7 +463,7 @@ public class MPayment extends X_C_Payment
 		setA_Country(country);
 	}   //  setAccountAddress
 
-	
+
 	/**************************************************************************
 	 *  Process Payment
 	 *  @return true if approved
@@ -537,7 +537,7 @@ public class MPayment extends X_C_Payment
 //				} else {
 					// Process if validation succeeds
 					approved = pp.processCC();
-					
+
 					if (approved)
 						setErrorMessage(null);
 					else
@@ -545,7 +545,7 @@ public class MPayment extends X_C_Payment
 						if(getTrxType().equals(TRXTYPE_Void) || getTrxType().equals(TRXTYPE_CreditPayment))
 							setErrorMessage("From " +  getCreditCardName() + ": " + getR_VoidMsg());
 						else
-							setErrorMessage("From " +  getCreditCardName() + ": " + getR_RespMsg());							
+							setErrorMessage("From " +  getCreditCardName() + ": " + getR_RespMsg());
 					}
 //				}
 			}
@@ -555,40 +555,40 @@ public class MPayment extends X_C_Payment
 			log.log(Level.SEVERE, "processOnline", e);
 			setErrorMessage(Msg.getMsg(Env.getCtx(), "PaymentNotProcessed") + ": " + e.getMessage());
 		}
-		
+
 		if (approved)
 		{
 			setCreditCardNumber(PaymentUtil.encrpytCreditCard(getCreditCardNumber()));
 			setCreditCardVV(PaymentUtil.encrpytCvv(getCreditCardVV()));
-			
+
 			setDateTrx(new Timestamp(System.currentTimeMillis()));
 			setDateAcct(new Timestamp(System.currentTimeMillis()));
 			setProcessed(true);		// prevent editing of payment details once approved
 		}
-		
+
 		setIsApproved(approved);
-		
+
 		Trx trx = Trx.get(Trx.createTrxName("ppt-"), true);
 		trx.setDisplayName(getClass().getName()+"_processOnline");
-		
+
 		try
 		{
 			trx.start();
-			
+
 			MPaymentTransaction m_mPaymentTransaction = createPaymentTransaction(trx.getTrxName());
 			m_mPaymentTransaction.setIsApproved(approved);
 			if(getTrxType().equals(TRXTYPE_Void) || getTrxType().equals(TRXTYPE_CreditPayment))
-				m_mPaymentTransaction.setIsVoided(approved);	
+				m_mPaymentTransaction.setIsVoided(approved);
 			m_mPaymentTransaction.setProcessed(approved);
 			m_mPaymentTransaction.setC_Payment_ID(getC_Payment_ID());
 			m_mPaymentTransaction.saveEx();
-			
+
 			MOnlineTrxHistory history = new MOnlineTrxHistory(getCtx(), 0, trx.getTrxName());
 			history.setAD_Table_ID(MPaymentTransaction.Table_ID);
 			history.setRecord_ID(m_mPaymentTransaction.getC_PaymentTransaction_ID());
 			history.setIsError(!approved);
 			history.setProcessed(approved);
-			
+
 			StringBuilder msg = new StringBuilder();
 			if (approved)
 			{
@@ -606,7 +606,7 @@ public class MPayment extends X_C_Payment
 				msg.append("ERROR: " + getErrorMessage() + "\n");
 			msg.append("Transaction Type: " + getTrxType());
 			history.setTextMsg(msg.toString());
-			
+
 			history.saveEx();
 		}
 		catch (Exception e)
@@ -622,10 +622,10 @@ public class MPayment extends X_C_Payment
 				trx.close();
 			}
 		}
-		
+
 		if(getTrxType().equals(TRXTYPE_Void) || getTrxType().equals(TRXTYPE_CreditPayment))
 			setIsVoided(approved);
-		
+
 		return approved;
 	}   //  processOnline
 
@@ -655,7 +655,7 @@ public class MPayment extends X_C_Payment
 		return retValue;    //  Payment processed
 	}   //  startProcess
 
-	
+
 	/**
 	 * 	Before Save
 	 *	@param newRecord new
@@ -663,7 +663,7 @@ public class MPayment extends X_C_Payment
 	 */
 	protected boolean beforeSave (boolean newRecord)
 	{
-		if (isComplete() && 
+		if (isComplete() &&
 			! is_ValueChanged(COLUMNNAME_Processed) &&
             (   is_ValueChanged(COLUMNNAME_C_BankAccount_ID)
              || is_ValueChanged(COLUMNNAME_C_BPartner_ID)
@@ -694,9 +694,9 @@ public class MPayment extends X_C_Payment
 			}
 		}
 		// end @Trifon - CashPayments
-		
+
 		//	We have a charge
-		if (getC_Charge_ID() != 0) 
+		if (getC_Charge_ID() != 0)
 		{
 			if (newRecord || is_ValueChanged("C_Charge_ID"))
 			{
@@ -723,16 +723,16 @@ public class MPayment extends X_C_Payment
 			}
 		}
 		//	Prepayment: No charge and order or project (not as acct dimension)
-		if (newRecord 
+		if (newRecord
 			|| is_ValueChanged("C_Charge_ID") || is_ValueChanged("C_Invoice_ID")
 			|| is_ValueChanged("C_Order_ID") || is_ValueChanged("C_Project_ID"))
-			setIsPrepayment (getC_Charge_ID() == 0 
+			setIsPrepayment (getC_Charge_ID() == 0
 				&& getC_BPartner_ID() != 0
-				&& (getC_Order_ID() != 0 
+				&& (getC_Order_ID() != 0
 					|| (getC_Project_ID() != 0 && getC_Invoice_ID() == 0)));
 		if (isPrepayment())
 		{
-			if (newRecord 
+			if (newRecord
 				|| is_ValueChanged("C_Order_ID") || is_ValueChanged("C_Project_ID"))
 			{
 				setWriteOffAmt(Env.ZERO);
@@ -741,7 +741,7 @@ public class MPayment extends X_C_Payment
 				setOverUnderAmt(Env.ZERO);
 			}
 		}
-		
+
 		//	Document Type/Receipt
 		if (getC_DocType_ID() == 0)
 			setC_DocType_ID();
@@ -757,7 +757,7 @@ public class MPayment extends X_C_Payment
 		//
 		if (!isOverUnderPayment())
 			setOverUnderAmt(Env.ZERO);
-		
+
 		//	Organization
 		if ((newRecord || is_ValueChanged("C_BankAccount_ID"))
 			&& getC_Charge_ID() == 0)	//	allow different org for charge
@@ -766,7 +766,7 @@ public class MPayment extends X_C_Payment
 			if (ba.getAD_Org_ID() != 0)
 				setAD_Org_ID(ba.getAD_Org_ID());
 		}
-		
+
 		// [ adempiere-Bugs-1885417 ] Validate BP on Payment Prepare or BeforeSave
 		// there is bp and (invoice or order)
 		if (getC_BPartner_ID() != 0 && (getC_Invoice_ID() != 0 || getC_Order_ID() != 0)) {
@@ -785,7 +785,7 @@ public class MPayment extends X_C_Payment
 				}
 			}
 		}
-		
+
 		if (isProcessed())
 		{
 			if (getCreditCardNumber() != null)
@@ -794,7 +794,7 @@ public class MPayment extends X_C_Payment
 				if (!encrpytedCCNo.equals(getCreditCardNumber()))
 					setCreditCardNumber(encrpytedCCNo);
 			}
-			
+
 			if (getCreditCardVV() != null)
 			{
 				String encrpytedCvv = PaymentUtil.encrpytCvv(getCreditCardVV());
@@ -802,7 +802,7 @@ public class MPayment extends X_C_Payment
 					setCreditCardVV(encrpytedCvv);
 			}
 		}
-		
+
 		if (MSysConfig.getBooleanValue(MSysConfig.IBAN_VALIDATION, true, Env.getAD_Client_ID(Env.getCtx()))) {
 			if (!Util.isEmpty(getIBAN())) {
 				setIBAN(IBAN.normalizeIBAN(getIBAN()));
@@ -900,11 +900,11 @@ public class MPayment extends X_C_Payment
 		boolean change = test != isAllocated();
 		if (change)
 			setIsAllocated(test);
-		if (log.isLoggable(Level.FINE)) log.fine("Allocated=" + test 
+		if (log.isLoggable(Level.FINE)) log.fine("Allocated=" + test
 			+ " (" + alloc + "=" + total + ")");
 		return change;
 	}	//	testAllocation
-	
+
 	/**
 	 * 	Set Allocated Flag for payments
 	 * 	@param ctx context
@@ -1056,7 +1056,7 @@ public class MPayment extends X_C_Payment
 		try
 		{
 			if (m_mBankAccountProcessors == null || m_mBankAccountProcessors.length == 0)
-				m_mBankAccountProcessors = MBankAccountProcessor.find(getCtx (), null, null, 
+				m_mBankAccountProcessors = MBankAccountProcessor.find(getCtx (), null, null,
 					getAD_Client_ID (), getC_Currency_ID (), amt, get_TrxName());
 			//
 			HashMap<String,ValueNamePair> map = new HashMap<String,ValueNamePair>(); //	to eliminate duplicates
@@ -1064,7 +1064,7 @@ public class MPayment extends X_C_Payment
 			{
 				MBankAccountProcessor bankAccountProcessor = m_mBankAccountProcessors[i];
 				MPaymentProcessor paymentProcessor = new MPaymentProcessor(getCtx(), bankAccountProcessor.getC_PaymentProcessor_ID(), get_TrxName());
-				
+
 				if (bankAccountProcessor.isAcceptAMEX() && paymentProcessor.isAcceptAMEX())
 					map.put (CREDITCARDTYPE_Amex, getCreditCardPair (CREDITCARDTYPE_Amex));
 				if (bankAccountProcessor.isAcceptDiners() && paymentProcessor.isAcceptDiners())
@@ -1101,7 +1101,7 @@ public class MPayment extends X_C_Payment
 		return new ValueNamePair (CreditCardType, getCreditCardName(CreditCardType));
 	}	//	getCreditCardPair
 
-	
+
 	/**************************************************************************
 	 *  Credit Card Number
 	 *  @param CreditCardNumber CreditCard Number
@@ -1110,7 +1110,7 @@ public class MPayment extends X_C_Payment
 	{
 		super.setCreditCardNumber (MPaymentValidate.checkNumeric(CreditCardNumber));
 	}	//	setCreditCardNumber
-	
+
 	/**
 	 *  Verification Code
 	 *  @param newCreditCardVV CC verification
@@ -1230,7 +1230,7 @@ public class MPayment extends X_C_Payment
 
 	/**
 	 *  Set DocumentNo to Payment info.
-	 * 	If there is a R_PnRef that is set automatically 
+	 * 	If there is a R_PnRef that is set automatically
 	 */
 	private void setDocumentNo()
 	{
@@ -1240,18 +1240,18 @@ public class MPayment extends X_C_Payment
 		//	Current Document No
 		String documentNo = getDocumentNo();
 		//	Existing reversal
-		if (documentNo != null 
+		if (documentNo != null
 			&& documentNo.indexOf(REVERSE_INDICATOR) >= 0)
 			return;
-		
-		//	If external number exists - enforce it 
+
+		//	If external number exists - enforce it
 		if (getR_PnRef() != null && getR_PnRef().length() > 0)
 		{
 			if (!getR_PnRef().equals(documentNo))
 				setDocumentNo(getR_PnRef());
 			return;
 		}
-		
+
 		documentNo = "";
 		// globalqss - read configuration to assign credit card or check number number for Payments
 		//	Credit Card
@@ -1260,7 +1260,7 @@ public class MPayment extends X_C_Payment
 			if (MSysConfig.getBooleanValue(MSysConfig.PAYMENT_OVERWRITE_DOCUMENTNO_WITH_CREDIT_CARD, true, getAD_Client_ID())) {
 				documentNo = getCreditCardType()
 					+ " " + Obscure.obscure(getCreditCardNumber())
-					+ " " + getCreditCardExpMM() 
+					+ " " + getCreditCardExpMM()
 					+ "/" + getCreditCardExpYY();
 			}
 		}
@@ -1273,7 +1273,7 @@ public class MPayment extends X_C_Payment
 				documentNo = getCheckNo();
 			}
 		}
-		//	Customer Check: Routing: Account #Check 
+		//	Customer Check: Routing: Account #Check
 		else if (TENDERTYPE_Check.equals(getTenderType())
 			&& isReceipt())
 		{
@@ -1307,7 +1307,7 @@ public class MPayment extends X_C_Payment
 		if (R_PnRef != null)
 			setDocumentNo (R_PnRef);
 	}	//	setR_PnRef
-	
+
 	//	---------------
 
 	/**
@@ -1491,7 +1491,7 @@ public class MPayment extends X_C_Payment
 		}
 	}	//	setC_DocType_ID
 
-	
+
 	/**
 	 * 	Set Document Type
 	 *	@param C_DocType_ID doc type
@@ -1502,10 +1502,10 @@ public class MPayment extends X_C_Payment
 	//		setDocumentNo(null);
 		super.setC_DocType_ID(C_DocType_ID);
 	}	//	setC_DocType_ID
-	
+
 	/**
 	 * 	Verify Document Type with Invoice
-	 * @param pAllocs 
+	 * @param pAllocs
 	 *	@return true if ok
 	 */
 	private boolean verifyDocType(MPaymentAllocate[] pAllocs)
@@ -1569,7 +1569,7 @@ public class MPayment extends X_C_Payment
 				pstmt = null;
 			}
 		}	//	now Charge
-		else if (getC_Charge_ID() > 0) 
+		else if (getC_Charge_ID() > 0)
 		{
 			// do nothing about charge
 		} // now payment allocate
@@ -1611,7 +1611,7 @@ public class MPayment extends X_C_Payment
 				}
 			}
 		}
-		
+
 		//	DocumentType
 		Boolean paymentSO = null;
 		PreparedStatement pstmt = null;
@@ -1641,9 +1641,9 @@ public class MPayment extends X_C_Payment
 		if (paymentSO == null)
 			return false;
 		setIsReceipt(paymentSO.booleanValue());
-			
+
 		//	We have an Invoice .. and it does not match
-		if (documentSO != null 
+		if (documentSO != null
 				&& documentSO.booleanValue() != paymentSO.booleanValue())
 			return false;
 		//	OK
@@ -1652,7 +1652,7 @@ public class MPayment extends X_C_Payment
 
 	/**
 	 * 	Verify Payment Allocate is ignored (must not exists) if the payment header has charge/invoice/order
-	 * @param pAllocs 
+	 * @param pAllocs
 	 *	@return true if ok
 	 */
 	private boolean verifyPaymentAllocateVsHeader(MPaymentAllocate[] pAllocs) {
@@ -1665,7 +1665,7 @@ public class MPayment extends X_C_Payment
 
 	/**
 	 * 	Verify Payment Allocate Sum must be equal to the Payment Amount
-	 * @param pAllocs 
+	 * @param pAllocs
 	 *	@return true if ok
 	 */
 	private boolean verifyPaymentAllocateSum(MPaymentAllocate[] pAllocs) {
@@ -1750,8 +1750,8 @@ public class MPayment extends X_C_Payment
 		else
 			setDescription(desc + " | " + description);
 	}	//	addDescription
-	
-	
+
+
 	/**
 	 * 	Get Pay Amt
 	 * 	@param absolute if true the absolute amount (i.e. negative if payment)
@@ -1763,7 +1763,7 @@ public class MPayment extends X_C_Payment
 			return super.getPayAmt();
 		return super.getPayAmt().negate();
 	}	//	getPayAmt
-	
+
 	/**
 	 * 	Get Pay Amt in cents
 	 *	@return amount in cents
@@ -1773,7 +1773,7 @@ public class MPayment extends X_C_Payment
 		BigDecimal bd = super.getPayAmt().multiply(Env.ONEHUNDRED);
 		return bd.intValue();
 	}	//	getPayAmtInCents
-	
+
 	/**************************************************************************
 	 * 	Process document
 	 *	@param processAction document action
@@ -1785,7 +1785,7 @@ public class MPayment extends X_C_Payment
 		DocumentEngine engine = new DocumentEngine (this, getDocStatus());
 		return engine.processIt (processAction, getDocAction());
 	}	//	process
-	
+
 	/**	Process Message 			*/
 	private String		m_processMsg = null;
 	/**	Just Prepared Flag			*/
@@ -1795,7 +1795,7 @@ public class MPayment extends X_C_Payment
 
 	/**
 	 * 	Unlock Document.
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean unlockIt()
 	{
@@ -1803,10 +1803,10 @@ public class MPayment extends X_C_Payment
 		setProcessing(false);
 		return true;
 	}	//	unlockIt
-	
+
 	/**
 	 * 	Invalidate Document
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean invalidateIt()
 	{
@@ -1815,10 +1815,10 @@ public class MPayment extends X_C_Payment
 		return true;
 	}	//	invalidateIt
 
-	
+
 	/**************************************************************************
 	 *	Prepare Document
-	 * 	@return new status (In Progress or Invalid) 
+	 * 	@return new status (In Progress or Invalid)
 	 */
 	public String prepareIt()
 	{
@@ -1833,13 +1833,13 @@ public class MPayment extends X_C_Payment
 		}
 
 		//	Std Period open?
-		if (!MPeriod.isOpen(getCtx(), getDateAcct(), 
+		if (!MPeriod.isOpen(getCtx(), getDateAcct(),
 			isReceipt() ? X_C_DocType.DOCBASETYPE_ARReceipt : X_C_DocType.DOCBASETYPE_APPayment, getAD_Org_ID()))
 		{
 			m_processMsg = "@PeriodClosed@";
 			return DocAction.STATUS_Invalid;
 		}
-		
+
 		//	Unsuccessful Online Payment
 		if (isOnline() && !isApproved())
 		{
@@ -1849,7 +1849,7 @@ public class MPayment extends X_C_Payment
 				m_processMsg = "@PaymentNotProcessed@";
 			return DocAction.STATUS_Invalid;
 		}
-		
+
 		//	Waiting Payment - Need to create Invoice & Shipment
 		if (getC_Order_ID() != 0 && getC_Invoice_ID() == 0)
 		{	//	see WebOrder.process
@@ -1859,7 +1859,7 @@ public class MPayment extends X_C_Payment
 				order.setC_Payment_ID(getC_Payment_ID());
 				order.setDocAction(X_C_Order.DOCACTION_WaitComplete);
 				order.set_TrxName(get_TrxName());
-				// added AdempiereException by zuhri 
+				// added AdempiereException by zuhri
 				if (!order.processIt (X_C_Order.DOCACTION_WaitComplete))
 					throw new AdempiereException(Msg.getMsg(getCtx(), "FailedProcessingDocument") + " - " + order.getProcessMsg());
 				// end added
@@ -1878,9 +1878,9 @@ public class MPayment extends X_C_Payment
 				}
 			}	//	WaitingPayment
 		}
-		
+
 		MPaymentAllocate[] pAllocs = MPaymentAllocate.get(this);
-		
+
 		//	Consistency of Invoice / Document Type and IsReceipt
 		if (!verifyDocType(pAllocs))
 		{
@@ -1908,20 +1908,20 @@ public class MPayment extends X_C_Payment
 			MBPartner bp = new MBPartner (getCtx(), getC_BPartner_ID(), get_TrxName());
 			if (X_C_BPartner.SOCREDITSTATUS_CreditStop.equals(bp.getSOCreditStatus()))
 			{
-				m_processMsg = "@BPartnerCreditStop@ - @TotalOpenBalance@=" 
+				m_processMsg = "@BPartnerCreditStop@ - @TotalOpenBalance@="
 					+ bp.getTotalOpenBalance()
 					+ ", @SO_CreditLimit@=" + bp.getSO_CreditLimit();
 				return DocAction.STATUS_Invalid;
 			}
 			if (X_C_BPartner.SOCREDITSTATUS_CreditHold.equals(bp.getSOCreditStatus()))
 			{
-				m_processMsg = "@BPartnerCreditHold@ - @TotalOpenBalance@=" 
+				m_processMsg = "@BPartnerCreditHold@ - @TotalOpenBalance@="
 					+ bp.getTotalOpenBalance()
 					+ ", @SO_CreditLimit@=" + bp.getSO_CreditLimit();
 				return DocAction.STATUS_Invalid;
 			}
 		}
-		
+
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_PREPARE);
 		if (m_processMsg != null)
 			return DocAction.STATUS_Invalid;
@@ -1931,10 +1931,10 @@ public class MPayment extends X_C_Payment
 			setDocAction(DOCACTION_Complete);
 		return DocAction.STATUS_InProgress;
 	}	//	prepareIt
-	
+
 	/**
 	 * 	Approve Document
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean  approveIt()
 	{
@@ -1942,10 +1942,10 @@ public class MPayment extends X_C_Payment
 		setIsApproved(true);
 		return true;
 	}	//	approveIt
-	
+
 	/**
 	 * 	Reject Approval
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean rejectIt()
 	{
@@ -1954,7 +1954,7 @@ public class MPayment extends X_C_Payment
 		return true;
 	}	//	rejectIt
 
-	
+
 	/**************************************************************************
 	 * 	Complete Document
 	 * 	@return new status (Complete, In Progress, Invalid, Waiting ..)
@@ -1969,7 +1969,7 @@ public class MPayment extends X_C_Payment
 			if (!DocAction.STATUS_InProgress.equals(status))
 				return status;
 		}
-		
+
 		//JPIERE-0218 -- Start
 		MDocType dt = MDocType.get(getCtx(), getC_DocType_ID());
 		if(dt.get_ValueAsBoolean("IsCompleteAfterReconciledJP"))
@@ -1978,7 +1978,7 @@ public class MPayment extends X_C_Payment
 			if(!isReconciled())
 				return DocAction.STATUS_InProgress;
 		}//JPiere-2018 -- finish
-		
+
 
 		// Set the definite document number after completed (if needed)
 		setDefiniteDocumentNo();
@@ -1991,8 +1991,8 @@ public class MPayment extends X_C_Payment
 		if (!isApproved())
 			approveIt();
 		if (log.isLoggable(Level.INFO)) log.info(toString());
-		
-		
+
+
 		//	Charge Handling
 		boolean createdAllocationRecords = false;
 		if (getC_Charge_ID() != 0)
@@ -2015,8 +2015,8 @@ public class MPayment extends X_C_Payment
 		{
 			MBPartner bp = new MBPartner (getCtx(), getC_BPartner_ID(), get_TrxName());
 			DB.getDatabase().forUpdate(bp, 0);
-			//	Update total balance to include this payment 
-			BigDecimal payAmt = MConversionRate.convertBase(getCtx(), getPayAmt(), 
+			//	Update total balance to include this payment
+			BigDecimal payAmt = MConversionRate.convertBase(getCtx(), getPayAmt(),
 				getC_Currency_ID(), getDateAcct(), getC_ConversionType_ID(), getAD_Client_ID(), getAD_Org_ID());
 			if (payAmt == null)
 			{
@@ -2032,11 +2032,11 @@ public class MPayment extends X_C_Payment
 				newBalance = newBalance.subtract(payAmt);
 			else
 				newBalance = newBalance.add(payAmt);
-				
+
 			bp.setTotalOpenBalance(newBalance);
 			bp.setSOCreditStatus();
 			bp.saveEx();
-		}		
+		}
 
 		//	Counter Doc
 		MPayment counter = createCounterDoc();
@@ -2065,14 +2065,14 @@ public class MPayment extends X_C_Payment
 			cl.setC_Payment_ID( getC_Payment_ID() ); // Set Reference to payment.
 			StringBuilder info=new StringBuilder();
 			info.append("Cash journal ( ")
-				.append(cash.getDocumentNo()).append(" )");				
+				.append(cash.getDocumentNo()).append(" )");
 			m_processMsg = info.toString();
 			//	Amount
 			BigDecimal amt = this.getPayAmt();
 /*
-			MDocType dt = MDocType.get(getCtx(), invoice.getC_DocType_ID());			
+			MDocType dt = MDocType.get(getCtx(), invoice.getC_DocType_ID());
 			if (MDocType.DOCBASETYPE_APInvoice.equals( dt.getDocBaseType() )
-				|| MDocType.DOCBASETYPE_ARCreditMemo.equals( dt.getDocBaseType() ) 
+				|| MDocType.DOCBASETYPE_ARCreditMemo.equals( dt.getDocBaseType() )
 			) {
 				amt = amt.negate();
 			}
@@ -2082,7 +2082,7 @@ public class MPayment extends X_C_Payment
 			cl.setDiscountAmt( Env.ZERO );
 			cl.setWriteOffAmt( Env.ZERO );
 			cl.setIsGenerated( true );
-			
+
 			if (!cl.save(get_TrxName()))
 			{
 				m_processMsg = "Could not save Cash Journal Line";
@@ -2090,7 +2090,7 @@ public class MPayment extends X_C_Payment
 			}
 		}
 		// End Trifon - CashPayments
-		
+
 		//	update C_Invoice.C_Payment_ID and C_Order.C_Payment_ID reference
 		if (getC_Invoice_ID() != 0)
 		{
@@ -2100,7 +2100,7 @@ public class MPayment extends X_C_Payment
 				inv.setC_Payment_ID(getC_Payment_ID());
 				inv.saveEx();
 			}
-		}		
+		}
 		if (getC_Order_ID() != 0)
 		{
 			MOrder ord = new MOrder(getCtx(), getC_Order_ID(), get_TrxName());
@@ -2110,7 +2110,7 @@ public class MPayment extends X_C_Payment
 				ord.saveEx();
 			}
 		}
-		
+
 		//	User Validation
 		String valid = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
 		if (valid != null)
@@ -2167,15 +2167,15 @@ public class MPayment extends X_C_Payment
 
 		//	Org Must be linked to BPartner
 		MOrg org = MOrg.get(getCtx(), getAD_Org_ID());
-		int counterC_BPartner_ID = org.getLinkedC_BPartner_ID(get_TrxName()); 
+		int counterC_BPartner_ID = org.getLinkedC_BPartner_ID(get_TrxName());
 		if (counterC_BPartner_ID == 0)
 			return null;
 		//	Business Partner needs to be linked to Org
 		MBPartner bp = new MBPartner (getCtx(), getC_BPartner_ID(), get_TrxName());
-		int counterAD_Org_ID = bp.getAD_OrgBP_ID_Int(); 
+		int counterAD_Org_ID = bp.getAD_OrgBP_ID_Int();
 		if (counterAD_Org_ID == 0)
 			return null;
-		
+
 		MBPartner counterBP = new MBPartner (getCtx(), counterC_BPartner_ID, get_TrxName());
 	//	MOrgInfo counterOrgInfo = MOrgInfo.get(getCtx(), counterAD_Org_ID);
 		if (log.isLoggable(Level.INFO)) log.info("Counter BP=" + counterBP.getName());
@@ -2235,7 +2235,7 @@ public class MPayment extends X_C_Payment
 		counter.saveEx(get_TrxName());
 		if (log.isLoggable(Level.FINE)) log.fine(counter.toString());
 		setRef_Payment_ID(counter.getC_Payment_ID());
-		
+
 		//	Document Action
 		if (counterDT != null)
 		{
@@ -2251,11 +2251,11 @@ public class MPayment extends X_C_Payment
 		}
 		return counter;
 	}	//	createCounterDoc
-	
+
 	/**
 	 * 	Allocate It.
 	 * 	Only call when there is NO allocation as it will create duplicates.
-	 * 	If an invoice exists, it allocates that 
+	 * 	If an invoice exists, it allocates that
 	 * 	otherwise it allocates Payment Selection.
 	 *	@return true if allocated
 	 */
@@ -2263,24 +2263,24 @@ public class MPayment extends X_C_Payment
 	{
 		//	Create invoice Allocation -	See also MCash.completeIt
 		if (getC_Invoice_ID() != 0)
-		{	
+		{
 				return allocateInvoice();
-		}	
+		}
 		//	Invoices of a AP Payment Selection
 		if (allocatePaySelection())
 			return true;
-		
+
 		if (getC_Order_ID() != 0)
 			return false;
-			
+
 		//	Allocate to multiple Payments based on entry
 		MPaymentAllocate[] pAllocs = MPaymentAllocate.get(this);
 		if (pAllocs.length == 0)
 			return false;
-		
-		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false, 
-			getDateTrx(), getC_Currency_ID(), 
-				Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + getDocumentNo(), 
+
+		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false,
+			getDateTrx(), getC_Currency_ID(),
+				Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + getDocumentNo(),
 				get_TrxName());
 		alloc.setAD_Org_ID(getAD_Org_ID());
 		alloc.setDateAcct(getDateAcct()); // in case date acct is different from datetrx in payment; IDEMPIERE-1532 tbayen
@@ -2293,13 +2293,37 @@ public class MPayment extends X_C_Payment
 		for (int i = 0; i < pAllocs.length; i++)
 		{
 			MPaymentAllocate pa = pAllocs[i];
+
+			//JPIERE-0214 - Start
+			BigDecimal InvoiceAmt = pa.getInvoiceAmt();
+			BigDecimal allocationAmt = pa.getAmount();			//	underpayment
+//			if (pa.getOverUnderAmt().signum() < 0 && pa.getAmount().signum() > 0)
+//				allocationAmt = allocationAmt.add(pa.getOverUnderAmt());	//	overpayment (negative)
+
 			MAllocationLine aLine = null;
 			if (isReceipt())
-				aLine = new MAllocationLine (alloc, pa.getAmount().compareTo(pa.getInvoiceAmt()) > 0 ? pa.getInvoiceAmt() : pa.getAmount(), //JPIERE-0214
-					pa.getDiscountAmt(), pa.getWriteOffAmt(), pa.getOverUnderAmt());
-			else
-				aLine = new MAllocationLine (alloc, pa.getAmount().compareTo(pa.getInvoiceAmt()) > 0 ? pa.getInvoiceAmt().negate() : pa.getAmount().negate(),//JPIERE-0214 
-					pa.getDiscountAmt().negate(), pa.getWriteOffAmt().negate(), pa.getOverUnderAmt().negate());
+			{
+				if(allocationAmt.signum() >= 0)
+				{
+					aLine = new MAllocationLine (alloc, allocationAmt.compareTo(InvoiceAmt) > 0 ? InvoiceAmt : allocationAmt,
+						pa.getDiscountAmt(), pa.getWriteOffAmt(), pa.getOverUnderAmt());
+				}else {
+					aLine = new MAllocationLine (alloc, allocationAmt.compareTo(InvoiceAmt) > 0 ? allocationAmt : InvoiceAmt,
+							pa.getDiscountAmt(), pa.getWriteOffAmt(), pa.getOverUnderAmt());
+				}
+
+			}else {
+				if(allocationAmt.signum() >= 0)
+				{
+					aLine = new MAllocationLine (alloc, allocationAmt.compareTo(InvoiceAmt) > 0 ? InvoiceAmt.negate() : allocationAmt.negate(),
+						pa.getDiscountAmt().negate(), pa.getWriteOffAmt().negate(), pa.getOverUnderAmt().negate());
+
+				}else {
+					aLine = new MAllocationLine (alloc, allocationAmt.compareTo(InvoiceAmt) > 0 ? allocationAmt.negate() : InvoiceAmt.negate(),
+							pa.getDiscountAmt().negate(), pa.getWriteOffAmt().negate(), pa.getOverUnderAmt().negate());
+				}
+			}
+			//JPIERE-0214 - Finish
 			aLine.setDocInfo(pa.getC_BPartner_ID(), 0, pa.getC_Invoice_ID());
 			aLine.setPaymentInfo(getC_Payment_ID(), 0);
 			if (!aLine.save(get_TrxName()))
@@ -2330,7 +2354,7 @@ public class MPayment extends X_C_Payment
 		if (getOverUnderAmt().signum() < 0 && getPayAmt().signum() > 0)
 			allocationAmt = allocationAmt.add(getOverUnderAmt());	//	overpayment (negative)
 
-		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false, 
+		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false,
 			getDateTrx(), getC_Currency_ID(),
 			Msg.translate(getCtx(), "C_Payment_ID") + ": " + getDocumentNo() + " [1]", get_TrxName());
 		alloc.setAD_Org_ID(getAD_Org_ID());
@@ -2338,10 +2362,10 @@ public class MPayment extends X_C_Payment
 		alloc.saveEx();
 		MAllocationLine aLine = null;
 		if (isReceipt())
-			aLine = new MAllocationLine (alloc, allocationAmt, 
+			aLine = new MAllocationLine (alloc, allocationAmt,
 				getDiscountAmt(), getWriteOffAmt(), getOverUnderAmt());
 		else
-			aLine = new MAllocationLine (alloc, allocationAmt.negate(), 
+			aLine = new MAllocationLine (alloc, allocationAmt.negate(),
 				getDiscountAmt().negate(), getWriteOffAmt().negate(), getOverUnderAmt().negate());
 		aLine.setDocInfo(getC_BPartner_ID(), 0, getC_Invoice_ID());
 		aLine.setC_Payment_ID(getC_Payment_ID());
@@ -2354,30 +2378,30 @@ public class MPayment extends X_C_Payment
 		alloc.saveEx(get_TrxName());
 		m_justCreatedAllocInv = alloc;
 		m_processMsg = "@C_AllocationHdr_ID@: " + alloc.getDocumentNo();
-			
+
 		//	Get Project from Invoice
-		int C_Project_ID = DB.getSQLValue(get_TrxName(), 
+		int C_Project_ID = DB.getSQLValue(get_TrxName(),
 			"SELECT MAX(C_Project_ID) FROM C_Invoice WHERE C_Invoice_ID=?", getC_Invoice_ID());
 		if (C_Project_ID > 0 && getC_Project_ID() == 0)
 			setC_Project_ID(C_Project_ID);
 		else if (C_Project_ID > 0 && getC_Project_ID() > 0 && C_Project_ID != getC_Project_ID())
-			log.warning("Invoice C_Project_ID=" + C_Project_ID 
+			log.warning("Invoice C_Project_ID=" + C_Project_ID
 				+ " <> Payment C_Project_ID=" + getC_Project_ID());
 		return true;
 	}	//	allocateInvoice
-	
+
 	/**
 	 * 	Allocate Payment Selection
 	 * 	@return true if allocated
 	 */
 	private boolean allocatePaySelection()
 	{
-		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false, 
+		MAllocationHdr alloc = new MAllocationHdr(getCtx(), false,
 			getDateTrx(), getC_Currency_ID(),
 			Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + getDocumentNo() + " [n]", get_TrxName());
 		alloc.setAD_Org_ID(getAD_Org_ID());
 		alloc.setDateAcct(getDateAcct()); // in case date acct is different from datetrx in payment
-		
+
 		String sql = "SELECT psc.C_BPartner_ID, psl.C_Invoice_ID, psl.IsSOTrx, "	//	1..3
 			+ " psl.PayAmt, psl.DiscountAmt, psl.DifferenceAmt, psl.OpenAmt, psl.WriteOffAmt "  // 4..8
 			+ "FROM C_PaySelectionLine psl"
@@ -2411,10 +2435,10 @@ public class MPayment extends X_C_Payment
 				}
 				MAllocationLine aLine = null;
 				if (isSOTrx)
-					aLine = new MAllocationLine (alloc, PayAmt, 
+					aLine = new MAllocationLine (alloc, PayAmt,
 						DiscountAmt, WriteOffAmt, OverUnderAmt);
 				else
-					aLine = new MAllocationLine (alloc, PayAmt.negate(), 
+					aLine = new MAllocationLine (alloc, PayAmt.negate(),
 						DiscountAmt.negate(), WriteOffAmt.negate(), OverUnderAmt.negate());
 				aLine.setDocInfo(C_BPartner_ID, 0, C_Invoice_ID);
 				aLine.setC_Payment_ID(getC_Payment_ID());
@@ -2432,12 +2456,12 @@ public class MPayment extends X_C_Payment
 			rs = null;
 			pstmt = null;
 		}
-		
+
 		//	Should start WF
 		boolean ok = true;
 		if (alloc.get_ID() == 0)
 		{
-			if (log.isLoggable(Level.FINE)) log.fine("No Allocation created - C_Payment_ID=" 
+			if (log.isLoggable(Level.FINE)) log.fine("No Allocation created - C_Payment_ID="
 				+ getC_Payment_ID());
 			ok = false;
 		}
@@ -2455,19 +2479,19 @@ public class MPayment extends X_C_Payment
 		}
 		return ok;
 	}	//	allocatePaySelection
-	
+
 	/**
 	 * 	De-allocate Payment.
 	 * 	Unkink Invoices and Orders and delete Allocations
-	 * @param accrual 
+	 * @param accrual
 	 */
 	private void deAllocate(boolean accrual)
 	{
 		// if (getC_Order_ID() != 0) setC_Order_ID(0); // IDEMPIERE-1764
 	//	if (getC_Invoice_ID() == 0)
 	//		return;
-		//	De-Allocate all 
-		MAllocationHdr[] allocations = MAllocationHdr.getOfPayment(getCtx(), 
+		//	De-Allocate all
+		MAllocationHdr[] allocations = MAllocationHdr.getOfPayment(getCtx(),
 			getC_Payment_ID(), get_TrxName());
 		if (log.isLoggable(Level.FINE)) log.fine("#" + allocations.length);
 		for (int i = 0; i < allocations.length; i++)
@@ -2478,8 +2502,8 @@ public class MPayment extends X_C_Payment
 			{
 				continue;
 			}
-			
-			if (accrual) 
+
+			if (accrual)
 			{
 				allocations[i].setDocAction(DocAction.ACTION_Reverse_Accrual);
 				if (!allocations[i].processIt(DocAction.ACTION_Reverse_Accrual))
@@ -2493,11 +2517,11 @@ public class MPayment extends X_C_Payment
 			}
 			allocations[i].saveEx();
 		}
-		
+
 		// 	Unlink (in case allocation did not get it)
 		if (getC_Invoice_ID() != 0)
 		{
-			//	Invoice					
+			//	Invoice
 			String sql = "UPDATE C_Invoice "
 				+ "SET C_Payment_ID = NULL, IsPaid='N' "
 				+ "WHERE C_Invoice_ID=" + getC_Invoice_ID()
@@ -2522,12 +2546,12 @@ public class MPayment extends X_C_Payment
 
 	/**
 	 * 	Void Document.
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean voidIt()
 	{
-		if (log.isLoggable(Level.INFO)) log.info(toString());		
-		
+		if (log.isLoggable(Level.INFO)) log.info(toString());
+
 		if (DOCSTATUS_Closed.equals(getDocStatus())
 			|| DOCSTATUS_Reversed.equals(getDocStatus())
 			|| DOCSTATUS_Voided.equals(getDocStatus()))
@@ -2539,7 +2563,7 @@ public class MPayment extends X_C_Payment
 		//	If on Bank Statement, don't void it - reverse it
 		if (getC_BankStatementLine_ID() > 0)
 			return reverseCorrectIt();
-		
+
 		//	Not Processed
 		if (DOCSTATUS_Drafted.equals(getDocStatus())
 			|| DOCSTATUS_Invalid.equals(getDocStatus())
@@ -2551,10 +2575,10 @@ public class MPayment extends X_C_Payment
 			m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_VOID);
 			if (m_processMsg != null)
 				return false;
-			
+
 			if (!voidOnlinePayment())
 				return false;
-			
+
 			addDescription(Msg.getMsg(getCtx(), "Voided") + " (" + getPayAmt() + ")");
 			setPayAmt(Env.ZERO);
 			setDiscountAmt(Env.ZERO);
@@ -2567,35 +2591,35 @@ public class MPayment extends X_C_Payment
 		else
 		{
 			boolean accrual = false;
-			try 
+			try
 			{
 				MPeriod.testPeriodOpen(getCtx(), getDateAcct(), getC_DocType_ID(), getAD_Org_ID());
 			}
-			catch (PeriodClosedException e) 
+			catch (PeriodClosedException e)
 			{
 				accrual = true;
 			}
-			
+
 			if (accrual)
 				return reverseAccrualIt();
 			else
 				return reverseCorrectIt();
 		}
-		
+
 		//
 		// After Void
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_VOID);
 		if (m_processMsg != null)
 			return false;
-		
+
 		setProcessed(true);
 		setDocAction(DOCACTION_None);
 		return true;
 	}	//	voidIt
-	
+
 	/**
 	 * 	Close Document.
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean closeIt()
 	{
@@ -2604,19 +2628,19 @@ public class MPayment extends X_C_Payment
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_CLOSE);
 		if (m_processMsg != null)
 			return false;
-		
+
 		setDocAction(DOCACTION_None);
-		
+
 		// After Close
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_CLOSE);
 		if (m_processMsg != null)
-			return false;		
+			return false;
 		return true;
 	}	//	closeIt
-	
+
 	/**
 	 * 	Reverse Correction
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean reverseCorrectIt()
 	{
@@ -2625,12 +2649,12 @@ public class MPayment extends X_C_Payment
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REVERSECORRECT);
 		if (m_processMsg != null)
 			return false;
-		
+
 		StringBuilder info = reverse(false);
 		if (info == null) {
 			return false;
 		}
-		
+
 		// After reverseCorrect
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSECORRECT);
 		if (m_processMsg != null)
@@ -2643,14 +2667,14 @@ public class MPayment extends X_C_Payment
 	private StringBuilder reverse(boolean accrual) {
 		if (!voidOnlinePayment())
 			return null;
-		
+
 		//	Std Period open?
 		Timestamp dateAcct = accrual ? Env.getContextAsDate(getCtx(), "#Date") : getDateAcct();
 		if (dateAcct == null) {
 			dateAcct = new Timestamp(System.currentTimeMillis());
 		}
 		MPeriod.testPeriodOpen(getCtx(), dateAcct, getC_DocType_ID(), getAD_Org_ID());
-		
+
 		//	Create Reversal
 		MPayment reversal = new MPayment (getCtx(), 0, get_TrxName());
 		copyValues(this, reversal);
@@ -2671,7 +2695,7 @@ public class MPayment extends X_C_Payment
 		reversal.setIsAllocated(true);
 		reversal.setIsReconciled(false);
 		reversal.setIsOnline(false);
-		reversal.setIsApproved(true); 
+		reversal.setIsApproved(true);
 		reversal.setR_PnRef(null);
 		reversal.setR_Result(null);
 		reversal.setR_RespMsg(null);
@@ -2683,7 +2707,7 @@ public class MPayment extends X_C_Payment
 		reversal.setPosted(false);
 		reversal.setDescription(getDescription());
 		reversal.addDescription("{->" + getDocumentNo() + ")");
-		//FR [ 1948157  ] 
+		//FR [ 1948157  ]
 		reversal.setReversal_ID(getC_Payment_ID());
 		reversal.saveEx(get_TrxName());
 		//	Post Reversal
@@ -2700,19 +2724,19 @@ public class MPayment extends X_C_Payment
 		//	Unlink & De-Allocate
 		deAllocate(accrual);
 		setIsAllocated (true);	//	the allocation below is overwritten
-		//	Set Status 
+		//	Set Status
 		addDescription("(" + reversal.getDocumentNo() + "<-)");
 		setDocStatus(DOCSTATUS_Reversed);
 		setDocAction(DOCACTION_None);
 		setProcessed(true);
-		//FR [ 1948157  ] 
+		//FR [ 1948157  ]
 		setReversal_ID(reversal.getC_Payment_ID());
-		
+
 		StringBuilder info = new StringBuilder(reversal.getDocumentNo());
 
 		//	Create automatic Allocation
-		MAllocationHdr alloc = new MAllocationHdr (getCtx(), false, 
-			getDateTrx(), 
+		MAllocationHdr alloc = new MAllocationHdr (getCtx(), false,
+			getDateTrx(),
 			getC_Currency_ID(),
 			Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + reversal.getDocumentNo(), get_TrxName());
 		alloc.setAD_Org_ID(getAD_Org_ID());
@@ -2720,29 +2744,29 @@ public class MPayment extends X_C_Payment
 		alloc.saveEx(get_TrxName());
 
 		//	Original Allocation
-		MAllocationLine aLine = new MAllocationLine (alloc, getPayAmt(true), 
+		MAllocationLine aLine = new MAllocationLine (alloc, getPayAmt(true),
 			Env.ZERO, Env.ZERO, Env.ZERO);
 		aLine.setDocInfo(getC_BPartner_ID(), 0, 0);
 		aLine.setPaymentInfo(getC_Payment_ID(), 0);
 		if (!aLine.save(get_TrxName()))
 			log.warning("Automatic allocation - line not saved");
 		//	Reversal Allocation
-		aLine = new MAllocationLine (alloc, reversal.getPayAmt(true), 
+		aLine = new MAllocationLine (alloc, reversal.getPayAmt(true),
 			Env.ZERO, Env.ZERO, Env.ZERO);
 		aLine.setDocInfo(reversal.getC_BPartner_ID(), 0, 0);
 		aLine.setPaymentInfo(reversal.getC_Payment_ID(), 0);
 		if (!aLine.save(get_TrxName()))
 			log.warning("Automatic allocation - reversal line not saved");
-		
+
 		// added AdempiereException by zuhri
 		if (!alloc.processIt(DocAction.ACTION_Complete))
 			throw new AdempiereException(Msg.getMsg(getCtx(), "FailedProcessingDocument") + " - " + alloc.getProcessMsg());
 		addDocsPostProcess(alloc);
 		// end added
 		alloc.saveEx(get_TrxName());
-		//			
+		//
 		info.append(" - @C_AllocationHdr_ID@: ").append(alloc.getDocumentNo());
-		
+
 		//	Update BPartner
 		if (getC_BPartner_ID() != 0)
 		{
@@ -2750,7 +2774,7 @@ public class MPayment extends X_C_Payment
 			bp.setTotalOpenBalance();
 			bp.saveEx(get_TrxName());
 		}
-		
+
 		return info;
 	}
 
@@ -2767,37 +2791,37 @@ public class MPayment extends X_C_Payment
 			return 0;
 		return id;
 	}	//	getC_BankStatementLine_ID
-	
+
 	/**
 	 * 	Reverse Accrual - none
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean reverseAccrualIt()
 	{
 		if (log.isLoggable(Level.INFO)) log.info(toString());
-		
+
 		// Before reverseAccrual
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REVERSEACCRUAL);
 		if (m_processMsg != null)
 			return false;
-		
+
 		StringBuilder info = reverse(true);
 		if (info == null) {
 			return false;
 		}
-		
+
 		// After reverseAccrual
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSEACCRUAL);
 		if (m_processMsg != null)
 			return false;
-				
+
 		m_processMsg = info.toString();
 		return true;
 	}	//	reverseAccrualIt
-	
-	/** 
+
+	/**
 	 * 	Re-activate
-	 * 	@return true if success 
+	 * 	@return true if success
 	 */
 	public boolean reActivateIt()
 	{
@@ -2805,19 +2829,19 @@ public class MPayment extends X_C_Payment
 		// Before reActivate
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REACTIVATE);
 		if (m_processMsg != null)
-			return false;	
-		
+			return false;
+
 		if (! reverseCorrectIt())
 			return false;
 
 		// After reActivate
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REACTIVATE);
 		if (m_processMsg != null)
-			return false;				
-		
+			return false;
+
 		return true;
 	}	//	reActivateIt
-	
+
 	/**
 	 * 	String Representation
 	 *	@return info
@@ -2833,7 +2857,7 @@ public class MPayment extends X_C_Payment
 			.append(",OverUnder=").append(getOverUnderAmt());
 		return sb.toString ();
 	}	//	toString
-	
+
 	/**
 	 * 	Get Document Info
 	 *	@return document info (untranslated)
@@ -2875,7 +2899,7 @@ public class MPayment extends X_C_Payment
 	//	return re.getPDF(file);
 	}	//	createPDF
 
-	
+
 	/*************************************************************************
 	 * 	Get Summary
 	 *	@return Summary of Document
@@ -2893,7 +2917,7 @@ public class MPayment extends X_C_Payment
 			sb.append(" - ").append(getDescription());
 		return sb.toString();
 	}	//	getSummary
-	
+
 	/**
 	 * 	Get Process Message
 	 *	@return clear text error message
@@ -2902,7 +2926,7 @@ public class MPayment extends X_C_Payment
 	{
 		return m_processMsg;
 	}	//	getProcessMsg
-	
+
 	/**
 	 * 	Get Document Owner (Responsible)
 	 *	@return AD_User_ID
@@ -2928,7 +2952,7 @@ public class MPayment extends X_C_Payment
 	public void setProcessUI(IProcessUI processMonitor) {
 		m_processUI = processMonitor;
 	}
-	
+
 	public MPaymentTransaction createPaymentTransaction(String trxName)
 	{
 		MPaymentTransaction paymentTransaction = new MPaymentTransaction(getCtx(), 0, trxName);
@@ -2991,11 +3015,11 @@ public class MPayment extends X_C_Payment
 		paymentTransaction.setTenderType(getTenderType());
 		paymentTransaction.setTrxType(getTrxType());
 		paymentTransaction.setVoiceAuthCode(getVoiceAuthCode());
-		
+
 		return paymentTransaction;
 	}
-	
-	private boolean voidOnlinePayment() 
+
+	private boolean voidOnlinePayment()
 	{
 		if (getTenderType().equals(TENDERTYPE_CreditCard) && isOnline())
 		{
@@ -3025,15 +3049,15 @@ public class MPayment extends X_C_Payment
 			ord.setC_Payment_ID(0);
 			ord.saveEx();
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public PO getPO() {
 		return this;
 	}
-	
+
 	public static int[] getCompletedPaymentIDs(int C_Order_ID, int C_Invoice_ID, String trxName)
 	{
 		StringBuilder whereClause = new StringBuilder();
@@ -3058,5 +3082,5 @@ public class MPayment extends X_C_Payment
 	public MAllocationHdr getJustCreatedAllocInv() {
 		return m_justCreatedAllocInv;
 	}
-	
+
 }   //  MPayment
