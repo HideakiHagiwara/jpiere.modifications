@@ -17,9 +17,7 @@
 
 package org.compiere.print;
 
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_INVENTORY;
-import static org.compiere.model.SystemIDs.PROCESS_RPT_M_MOVEMENT;
-import static org.compiere.model.SystemIDs.TABLE_AD_TABLE;
+import static org.compiere.model.SystemIDs.*;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -646,6 +644,22 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 				doc.getBody().setNeedClosingTag(false);
 				doc.appendHead("<meta charset=\"UTF-8\" />");
 				doc.appendBody(table);
+
+				//JPIERE-0449:Start - CSS is not applied when the report is initially displayed.
+				mapCssInfo = new HashMap<CSSInfo, List<ColumnInfo>>();
+				MPrintFormatItem item = null;
+				int printColIndex = -1;
+				for(int col = 0; col < m_printFormat.getItemCount(); col++)
+				{
+					item = m_printFormat.getItem(col);
+					if(item.isPrinted())
+					{
+						printColIndex++;
+						addCssInfo(item, printColIndex);
+					}
+				}
+				//JPIERE-0449:end
+
 				appendInlineCss (doc);
 				if (extension != null && extension.getStyleURL() != null)
 				{
@@ -760,7 +774,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 									value = pde.getValueDisplay(language);
 								}//JPiere-0003 Finish
 
-								if (colSuppressRepeats[printColIndex]){
+								if (colSuppressRepeats != null && colSuppressRepeats[printColIndex]){
 									if (value.equals(preValues[printColIndex])){
 										td.addElement("&nbsp;");
 										continue;
@@ -836,9 +850,12 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 									else
 										td.setClass(cssPrefix + "-text");
 								}
+
+								//JPIERE-0449:Start - Since it is a double process and is useless, comment out
 								//just run with on record
-								if (row == 0)
-									addCssInfo(item, printColIndex);
+//								if (row == 0)
+//									addCssInfo(item, printColIndex);
+								//JPIERE-0449:End
 
 							}
 							else if (obj instanceof PrintData)
@@ -990,7 +1007,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 									}
 								}					//JPiere-0003 Finish
 
-								if (colSuppressRepeats[printColIndex]){
+								if (colSuppressRepeats != null && colSuppressRepeats[printColIndex]){
 									if (data.equals(preValues[printColIndex])){
 										continue;
 									}else{
@@ -1165,7 +1182,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			return file;
 		return null;
 	}	//	getHTML
-	
+
 	/**************************************************************************
 	 * 	Create CSV file.
 	 * 	(created in temporary storage)
@@ -1196,7 +1213,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 			return file;
 		return null;
 	}	//	getCSV
-	
+
 	/**************************************************************************
 	 * 	Create XLS file.
 	 * 	(created in temporary storage)
@@ -1223,18 +1240,18 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		{
 			log.log(Level.SEVERE, "", e);
 		}
-		try 
+		try
 		{
 			createXLS(file, Env.getLanguage(getCtx()));
 			return file;
-		} 
+		}
 		catch (Exception e)
 		{
 			log.log(Level.SEVERE, "", e);
 			return null;
 		}
 	}	//	getXLS
-	
+
 	/**
 	 * 	Create PDF File
 	 * 	@param file file
@@ -1300,7 +1317,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		}
 		return prefix.toString();
 	}
-	
+
 	/**
 	 * 	Create PDF as Data array
 	 *	@return pdf data
