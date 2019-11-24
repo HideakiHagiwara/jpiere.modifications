@@ -689,8 +689,22 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 
 			if (doc != null)
 			{
-				appendInlineCss(doc);
+				//IDEMPIERE-4113 & JPIERE-0449
 				mapCssInfo.clear();
+				MPrintFormatItem item = null;
+				int printColIndex = -1;
+				for(int col = 0; col < m_printFormat.getItemCount(); col++)
+				{
+					item = m_printFormat.getItem(col);
+					if(item.isPrinted())
+					{
+						printColIndex++;
+						addCssInfo(item, printColIndex);
+					}
+				}//IDEMPIERE-4113 & JPIERE-0449
+
+				appendInlineCss(doc);
+
 
 				StringBuilder styleBuild = new StringBuilder();
 				MPrintTableFormat tf = m_printFormat.getTableFormat();
@@ -932,11 +946,11 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 										td.setClass(cssPrefix + "-text");
 								}
 
-								//JPIERE-0449:Start - Since it is a double process and is useless, comment out
+								//IDEMPIERE-4113 & JPIERE-0449:Start - Since it is a double process and is useless, comment out
 								//just run with on record
 //								if (row == 0)
 //									addCssInfo(item, printColIndex);
-								//JPIERE-0449:End
+								//IDEMPIERE-4113 & JPIERE-0449:End
 
 							}
 							else if (obj instanceof PrintData)
