@@ -689,7 +689,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 
 			if (doc != null)
 			{
-				//IDEMPIERE-4113 & JPIERE-0449
+				//IDEMPIERE-4113
 				mapCssInfo.clear();
 				MPrintFormatItem item = null;
 				int printColIndex = -1;
@@ -701,8 +701,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 						printColIndex++;
 						addCssInfo(item, printColIndex);
 					}
-				}//IDEMPIERE-4113 & JPIERE-0449
-
+				}//IDEMPIERE-4113
 				appendInlineCss(doc);
 
 
@@ -945,13 +944,6 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 									else
 										td.setClass(cssPrefix + "-text");
 								}
-
-								//IDEMPIERE-4113 & JPIERE-0449:Start - Since it is a double process and is useless, comment out
-								//just run with on record
-//								if (row == 0)
-//									addCssInfo(item, printColIndex);
-								//IDEMPIERE-4113 & JPIERE-0449:End
-
 							}
 							else if (obj instanceof PrintData)
 							{
