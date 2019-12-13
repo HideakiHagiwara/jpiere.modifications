@@ -7,3 +7,4 @@ Bundle-Vendor: OSS ERP Solutions
 Fragment-Host: org.adempiere.ui.zk;bundle-version="7.1.0"
 Automatic-Module-Name: jpiere.modification.org.adempiere.ui.zk
 Bundle-RequiredExecutionEnvironment: JavaSE-11
+Service-Component: OSGI-INF/*.xml
